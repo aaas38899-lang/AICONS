@@ -1,0 +1,1105 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>منصة AICONS للتمويل والاستثمار المطور</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --bg-gradient: linear-gradient(135deg, #0c0f26 0%, #17123a 50%, #050814 100%);
+            --card-bg: rgba(20, 24, 50, 0.88);
+            --text-white: #ffffff;
+            --text-dim: #b0b5e0;
+            --accent-blue: #00d2ff;
+            --accent-purple: #9d4edd;
+            --border-color: rgba(255, 255, 255, 0.08);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Cairo', sans-serif; user-select: none; }
+        
+        body {
+            background: var(--bg-gradient);
+            color: var(--text-white);
+            min-height: 100vh;
+            overflow-x: hidden;
+            font-size: 13px;
+        }
+
+        /* تأثير الانتظار الدوار العام */
+        .loading-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(10, 11, 25, 0.92); z-index: 9999;
+            display: none; flex-direction: column; justify-content: center; align-items: center;
+        }
+        .spinner-arrow {
+            width: 45px; height: 45px;
+            border: 4px solid transparent;
+            border-top: 4px solid var(--accent-blue);
+            border-right: 4px solid var(--accent-purple);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* شريط الشرح اللانهائي */
+        .marquee-container {
+            width: 100%; background: rgba(0, 0, 0, 0.7);
+            border-bottom: 1px solid var(--accent-purple);
+            overflow: hidden; position: fixed; top: 0; z-index: 999; height: 35px; display: flex; align-items: center;
+        }
+        .marquee-text {
+            display: flex; white-space: nowrap;
+            animation: marqueeMove 25s linear infinite;
+            direction: ltr;
+        }
+        .marquee-item { padding: 0 40px; font-size: 11px; color: #fff; font-weight: 600; }
+        @keyframes marqueeMove { 0% { transform: translate3d(-100%, 0, 0); } 100% { transform: translate3d(100%, 0, 0); } }
+
+        .app-container { margin-top: 50px; margin-bottom: 75px; padding: 15px; display: none; }
+        .app-container.active { display: block; }
+
+        /* واجهات الدخول */
+        .auth-card {
+            max-width: 350px; margin: 30px auto; padding: 22px;
+            background: var(--card-bg); border-radius: 14px;
+            border: 1px solid var(--border-color); text-align: center;
+        }
+        .auth-card h2 { font-size: 20px; color: var(--accent-blue); margin-bottom: 4px; }
+        .auth-card h3 { font-size: 12px; color: var(--text-dim); margin-bottom: 15px; }
+        .auth-img { width: 65px; height: 65px; margin-bottom: 15px; }
+        
+        .input-group { position: relative; margin-bottom: 12px; text-align: right; }
+        .input-group label { display: block; font-size: 11px; color: var(--accent-blue); margin-bottom: 4px; padding-right: 2px; }
+        .input-group i { position: absolute; right: 12px; top: 33px; font-size: 12px; color: var(--text-dim); }
+        .input-group.no-label i { top: 12px; }
+        
+        input, select, textarea {
+            width: 100%; padding: 10px 35px 10px 12px; background: rgba(255,255,255,0.04);
+            border: 1px solid var(--border-color); border-radius: 7px; color: #fff; font-size: 12px;
+        }
+        input:focus, select:focus { border-color: var(--accent-blue); outline: none; }
+
+        .btn {
+            width: 100%; padding: 10px; background: linear-gradient(90deg, var(--accent-blue), var(--accent-purple));
+            border: none; border-radius: 7px; color: white; font-weight: 600; font-size: 12px; cursor: pointer; transition: 0.3s;
+            text-align: center; display: inline-block; text-decoration: none;
+        }
+        .btn:active { transform: scale(0.98); }
+        .btn-secondary { background: rgba(255,255,255,0.08); color: #fff; font-size: 11px; margin-top: 10px; }
+
+        /* الترويسة */
+        .top-bar {
+            display: flex; justify-content: space-between; align-items: center;
+            background: var(--card-bg); padding: 12px; border-radius: 12px; margin-bottom: 15px;
+        }
+        .top-icons i { font-size: 17px; margin-right: 12px; cursor: pointer; position: relative; }
+        
+        /* السلايدر الواقعي */
+        .slider-box {
+            position: relative; width: 100%; height: 160px; border-radius: 12px; overflow: hidden; margin-bottom: 15px;
+            box-shadow: inset 0 0 40px rgba(0,0,0,0.8); border: 1px solid rgba(255,255,255,0.05);
+        }
+        .slider-bg-img { width: 100%; height: 100%; object-fit: cover; filter: brightness(0.55) contrast(1.1); transition: transform 0.8s ease; }
+        .slider-content-overlay { position: absolute; bottom: 0; right: 0; width: 100%; padding: 12px; background: linear-gradient(to top, rgba(5,8,20,0.95), transparent); }
+        .slider-badge { background: var(--accent-blue); color: #000; font-size: 9px; font-weight: bold; padding: 2px 6px; border-radius: 4px; display: inline-block; margin-bottom: 4px; }
+        .slider-desc { font-size: 12px; font-weight: 600; text-shadow: 1px 1px 2px #000; }
+
+        /* الحساب */
+        .user-main-card {
+            background: linear-gradient(135deg, #16193b 0%, #251c5a 100%);
+            padding: 15px; border-radius: 12px; margin-bottom: 15px; border: 1px solid rgba(255,255,255,0.05);
+        }
+        .balance-title { font-size: 11px; color: var(--text-dim); }
+        .balance-value { font-size: 24px; font-weight: bold; color: #fff; margin: 3px 0; }
+        
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 10px; }
+        .stat-box { background: rgba(0,0,0,0.25); padding: 8px; border-radius: 7px; text-align: center; cursor: pointer; }
+        .stat-box span { display: block; font-size: 9px; color: var(--text-dim); }
+        .stat-box strong { font-size: 11px; color: var(--accent-blue); }
+
+        /* العداد الدائري للتعدين */
+        .timer-cone-container {
+            margin: 15px auto; width: 135px; height: 135px; position: relative;
+            background: conic-gradient(from 0deg, var(--accent-blue), var(--accent-purple), transparent 75%);
+            border-radius: 50%; display: flex; justify-content: center; align-items: center;
+            animation: rotateConeOuter 3s linear infinite;
+        }
+        @keyframes rotateConeOuter { 100% { transform: rotate(360deg); } }
+        
+        .timer-cone-inner {
+            width: 116px; height: 116px; background: #0c0f26; border-radius: 50%;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            animation: rotateConeOuter 3s linear infinite reverse;
+        }
+        .timer-digits { font-size: 16px; font-weight: bold; color: #fff; letter-spacing: 0.5px; }
+
+        /* خط تقدم الـ XP */
+        .xp-container { background: rgba(255,255,255,0.04); padding: 10px; border-radius: 8px; margin-bottom: 15px; }
+        .xp-bar-bg { width: 100%; height: 7px; background: #1a1a2e; border-radius: 4px; overflow: hidden; margin-top: 5px; }
+        .xp-bar-fill { width: 0%; height: 100%; background: linear-gradient(90deg, #00ffcc, var(--accent-blue)); transition: 0.4s; }
+
+        /* شبكة أسواق التداول */
+        .crypto-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; background: var(--card-bg); padding: 10px; border-radius: 8px; }
+        .crypto-item { display: flex; justify-content: space-between; font-size: 11px; padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,0.03); }
+
+        /* قائمة استعراض أعضاء الفريق */
+        .team-list-container { max-height: 200px; overflow-y: auto; margin-top: 15px; }
+        .team-member-item {
+            background: rgba(255, 255, 255, 0.04); padding: 8px 12px; border-radius: 6px;
+            margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center;
+            border-right: 3px solid var(--accent-blue);
+        }
+
+        /* شريط سفلي */
+        .bottom-navbar {
+            position: fixed; bottom: 0; left: 0; width: 100%; background: #090b18;
+            border-top: 1px solid var(--border-color); display: flex; justify-content: space-around; padding: 10px 0; z-index: 999;
+        }
+        .nav-link { display: flex; flex-direction: column; align-items: center; font-size: 11px; color: var(--text-dim); cursor: pointer; }
+        .nav-link.active { color: var(--accent-blue); }
+        .nav-link i { font-size: 17px; margin-bottom: 2px; }
+
+        /* النوافذ المنبثقة */
+        .modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85); z-index: 2000; justify-content: center; align-items: center; padding: 15px;
+        }
+        .modal-content {
+            background: #11142a; padding: 20px; border-radius: 14px; width: 100%; max-width: 380px;
+            border: 1px solid var(--accent-purple); max-height: 85vh; overflow-y: auto;
+        }
+        .close-btn { float: left; color: #ff3366; cursor: pointer; font-size: 18px; }
+        .log-box { font-size: 11px; background: rgba(0,0,0,0.3); padding: 7px; border-radius: 5px; margin-top: 5px; border-left: 3px solid var(--accent-blue); }
+
+        /* ==================== تصميم عداد التنزيل المتطور ==================== */
+        .download-box { text-align: center; padding: 20px 0; }
+        .progress-circle-bar {
+            width: 110px; height: 110px; border-radius: 50%;
+            background: conic-gradient(#ff3366 0%, #222 0%); 
+            margin: 15px auto; display: flex; justify-content: center; align-items: center;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+            transition: background 0.1s linear;
+        }
+        .progress-circle-inner { 
+            width: 94px; height: 94px; background: #11142a; border-radius: 50%; 
+            display: flex; flex-direction: column; justify-content: center; align-items: center; 
+            font-weight: bold; font-size: 16px; color: #fff;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.8);
+        }
+        .download-status-text { font-size: 11px; color: var(--text-dim); margin-top: 4px; font-weight: normal; }
+
+        /* أيقونة الدعم العائمة */
+        .floating-support-btn {
+            position: fixed; bottom: 75px; left: 20px; width: 52px; height: 52px;
+            background: linear-gradient(135deg, #0088cc, #00a8ff);
+            border-radius: 50%; display: flex; justify-content: center; align-items: center;
+            box-shadow: 0 4px 15px rgba(0, 136, 204, 0.4); z-index: 9999; cursor: pointer;
+            animation: pulseSupport 2s infinite; transition: 0.3s;
+        }
+        .floating-support-btn i { color: #fff; font-size: 24px; }
+        @keyframes pulseSupport {
+            0% { transform: scale(1); box-shadow: 0 4px 15px rgba(0, 136, 204, 0.4); }
+            50% { transform: scale(1.06); box-shadow: 0 4px 22px rgba(0, 136, 204, 0.7); }
+            100% { transform: scale(1); box-shadow: 0 4px 15px rgba(0, 136, 204, 0.4); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="marquee-container">
+        <div class="marquee-text">
+            <div class="marquee-item">AICONS: منصه تشغيل أموال رائدة في جميع مجالات التمويل ونظام التمويه للمشاريع الصغيره لتواكب العولمه والمشاريع اونلاين.</div>
+            <div class="marquee-item">قم بتنشيط خطتك الاستثمارية الآن واستلم العوائد اليومية المقررة والمضمونة آلياً 2026.</div>
+        </div>
+    </div>
+
+    <div id="loading_screen" class="loading-overlay">
+        <div class="spinner-arrow"></div>
+        <p style="margin-top:15px; font-size:11px; color:var(--accent-blue);">جاري المعالجة والمزامنة الآمنة...</p>
+    </div>
+
+    <div id="auth_view" class="app-container active">
+        <div id="register_box" class="auth-card">
+            <i class="fa fa-cubes-stacked auth-img" style="font-size: 45px; color: var(--accent-blue);"></i>
+            <h2>AICONS</h2>
+            <h3>إنشاء حساب ومزامنة سحابية</h3>
+            
+            <div class="input-group no-label"><i class="fa fa-user"></i><input type="text" id="reg_user" placeholder="اسم المستخدم الجديد"></div>
+            <div class="input-group no-label"><i class="fa fa-envelope"></i><input type="email" id="reg_email" placeholder="البريد الإلكتروني"></div>
+            <div class="input-group no-label">
+                <i class="fa fa-globe"></i>
+                <select id="reg_country" style="padding-right: 35px;">
+                    <option value="+964">العراق (+964)</option>
+                    <option value="+966">السعودية (+966)</option>
+                    <option value="+971">الإمارات (+971)</option>
+                </select>
+            </div>
+            <div class="input-group no-label"><i class="fa fa-phone"></i><input type="tel" id="reg_phone" placeholder="رقم الهاتف الخاص بك"></div>
+            <div class="input-group no-label"><i class="fa fa-lock"></i><input type="password" id="reg_pass" placeholder="الرمز السري"></div>
+            <div class="input-group no-label"><i class="fa fa-gift"></i><input type="text" id="reg_ref" placeholder="كود الإحالة (إجباري)"></div>
+            
+            <button class="btn" onclick="actionRegister()">إنشاء حساب جديد ومزامنة</button>
+            <button class="btn btn-secondary" onclick="toggleAuth(false)">لديك حساب مسبق؟ تسجيل الدخول</button>
+        </div>
+
+        <div id="login_box" class="auth-card" style="display:none;">
+            <i class="fa fa-shield-halved auth-img" style="font-size: 45px; color: var(--accent-purple);"></i>
+            <h2>AICONS</h2>
+            <h3>تسجيل الدخول والمزامنة</h3>
+            <div class="input-group no-label"><i class="fa fa-envelope"></i><input type="email" id="login_email" placeholder="البريد الإلكتروني"></div>
+            <div class="input-group no-label"><i class="fa fa-lock"></i><input type="password" id="login_pass" placeholder="الرمز السري"></div>
+            <button class="btn" onclick="actionLogin()">تسجيل الدخول الفوري</button>
+            <button class="btn btn-secondary" onclick="toggleAuth(true)">لا تملك حساب؟ إنشاء حساب جديد</button>
+        </div>
+    </div>
+
+    <div id="main_app_view" style="display:none;">
+        
+        <div id="home_tab" class="app-container active">
+            <div class="top-bar">
+                <span style="font-weight:bold; color:var(--accent-blue);"><i class="fa fa-robot"></i> AICONS SYSTEM</span>
+                <div class="top-icons">
+                    <i class="fa fa-download" onclick="startAppDownloadProcess()"></i>
+                    <i class="fa fa-bell" onclick="openModal('notifications_modal')"><span id="noti_dot" style="position:absolute; top:0; right:0; width:6px; height:6px; background:red; border-radius:50%;"></span></i>
+                </div>
+            </div>
+
+            <div class="slider-box" id="slider_main_box">
+                <img id="slider_img" class="slider-bg-img" src="" alt="8K Industrial Image">
+                <div class="slider-content-overlay">
+                    <span class="slider-badge" id="slider_badge_lbl">العولمة والإنتاج</span>
+                    <div class="slider-desc" id="slider_text_lbl">جاري تحميل المشاهد بدقة 8K...</div>
+                </div>
+            </div>
+
+            <div class="user-main-card">
+                <span class="balance-title">رصيد الحساب المحفوظ (USDT)</span>
+                <div class="balance-value" id="user_balance">0.00 USDT</div>
+                
+                <div class="stats-grid">
+                    <div class="stat-box"><span>الربح اليومي</span><strong id="user_daily">0.00$</strong></div>
+                    <div class="stat-box"><span>أرباح الفريق</span><strong id="user_team_profit">0.00$</strong></div>
+                    <div class="stat-box" onclick="openModal('active_packages_modal')"><span>الباقات النشطة</span><strong id="user_pkgs_count">0 باقة</strong></div>
+                </div>
+            </div>
+
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:15px;">
+                <button class="btn" onclick="openModal('deposit_modal')"><i class="fa fa-arrow-down-long"></i> إيداع رصيد</button>
+                <button class="btn" style="background:linear-gradient(90deg, #ff3366, var(--accent-purple));" onclick="openModal('withdraw_modal')"><i class="fa fa-arrow-up-long"></i> سحب الأرباح</button>
+            </div>
+
+            <button class="btn" style="background: linear-gradient(90deg, #ffaa00, #ff5500); margin-bottom: 15px;" onclick="openModal('vip_modal')">
+                <i class="fa fa-crown"></i> ميزات وترقيات الحساب ومستويات VIP
+            </button>
+
+            <div style="text-align:center; margin-bottom:15px;">
+                <p style="font-size:12px; color:var(--text-dim);">مؤقت دورة التعدين والتمويل الحسابي</p>
+                <div class="timer-cone-container">
+                    <div class="timer-cone-inner">
+                        <div class="timer-digits" id="countdown_display">24:00:00</div>
+                        <small style="font-size:9px; color:var(--accent-blue); margin-top:2px;" id="timer_status_label">جاهز للجمع</small>
+                    </div>
+                </div>
+                <button class="btn" id="claim_earnings_btn" style="width:auto; padding:6px 20px; font-size:11px;" onclick="triggerMiningDay()"><i class="fa fa-bolt"></i> تحديث واستلام العائد اليومي</button>
+            </div>
+
+            <div class="xp-container">
+                <div style="display:flex; justify-content:space-between; font-size:11px;">
+                    <span>مستوى تقدم تكرار الاشتراك (XP)</span>
+                    <span id="xp_percent_text">0%</span>
+                </div>
+                <div class="xp-bar-bg"><div class="xp-bar-fill" id="xp_bar_fill"></div></div>
+                <small style="font-size:10px; color:var(--text-dim);">مكافأة تصل إلى 50$ عند إكمال الشريط 100%.</small>
+            </div>
+
+            <div class="user-main-card" style="background: rgba(0,0,0,0.4);">
+                <h4 style="font-size:12px; color:var(--accent-blue); margin-bottom:6px;"><i class="fa fa-newspaper"></i> رادار الأخبار الاقتصادية والتمويلية اللحظي</h4>
+                <div id="economy_news_box" style="font-size:11px; height:55px; overflow:hidden; line-height:1.6;"></div>
+            </div>
+
+            <div class="user-main-card">
+                <h4 style="font-size:12px; margin-bottom:8px;"><i class="fa fa-chart-line"></i> أسواق المضاربة الحية والعملات العشرين الموسعة</h4>
+                <div class="crypto-grid" id="crypto_market_prices"></div>
+            </div>
+        </div>
+
+        <div id="invest_tab" class="app-container">
+            <h2>خطط وباقات الاستثمار والتمويل المطور</h2>
+            <p style="font-size:11px; color:var(--text-dim); margin-bottom:15px;">اختر أحد الباقات التالية لتشغيل رأس المال وضخ الأرباح للمحافظ الفورية:</p>
+            <div id="packages_list_wrapper"></div>
+        </div>
+
+        <div id="team_tab" class="app-container">
+            <h2>إدارة شؤون الفريق والمحالات</h2>
+            <div class="user-main-card">
+                <p>رمز الإحالة الخاص بك: <strong id="team_my_code" style="color:var(--accent-blue);">---</strong></p>
+                <button class="btn btn-secondary" onclick="copyReferralLink()"><i class="fa fa-copy"></i> نسخ الرابط والكود</button>
+            </div>
+            
+            <div class="stats-grid">
+                <div class="stat-box"><span>الفريق النشط</span><strong id="active_team_count">0</strong></div>
+                <div class="stat-box"><span>الفريق غير النشط</span><strong id="inactive_team_count">0</strong></div>
+                <div class="stat-box"><span>تراكمي التمويل</span><strong id="team_total_bonus">0.00$</strong></div>
+            </div>
+
+            <div class="user-main-card" style="margin-top:15px;">
+                <h4 style="font-size:12px; color:var(--accent-blue); margin-bottom:8px;"><i class="fa fa-users-viewfinder"></i> أعضاء فريقك المسجلين حالياً:</h4>
+                <div class="team-list-container" id="team_members_list_wrapper">
+                    <p style="font-size:11px; opacity:0.6; text-align:center;">جاري فحص وتحديث قائمة المشتركين الفورية...</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="profile_tab" class="app-container">
+            <h2>الملف الشخصي الآمن</h2>
+            <div class="user-main-card" style="text-align:center;">
+                <i class="fa fa-user-gear" style="font-size:35px; color:var(--accent-purple); margin-bottom:10px;"></i>
+                <h3 id="prof_name_display" style="color:#fff;">---</h3>
+                <p style="font-size:11px; color:var(--text-dim);" id="prof_phone_display">---</p>
+                <p style="font-size:11px; color:var(--text-dim);" id="prof_email_display">---</p>
+            </div>
+
+            <button class="btn" style="background: linear-gradient(90deg, #ffaa00, #ff5500); margin-bottom:10px;" onclick="openModal('vip_modal')"><i class="fa fa-crown"></i> ترقية الحساب وميزات VIP</button>
+            <button class="btn btn-secondary" style="background:#cc2255;" onclick="logoutSession()"><i class="fa fa-sign-out-alt"></i> تسجيل خروج آمن</button>
+            <button class="btn" id="admin_gate_btn" style="display:none; margin-top:15px; background:#4b0082;" onclick="openAdminDashboard()"><i class="fa fa-user-shield"></i> لوحة الإدارة العليا والتحكم</button>
+        </div>
+
+        <nav class="bottom-navbar">
+            <div class="nav-link active" onclick="switchMainTab('home_tab', this)"><i class="fa fa-home"></i>الرئيسية</div>
+            <div class="nav-link" onclick="switchMainTab('invest_tab', this)"><i class="fa fa-chart-pie"></i>الاستثمار</div>
+            <div class="nav-link" onclick="switchMainTab('team_tab', this)"><i class="fa fa-users"></i>الفريق</div>
+            <div class="nav-link" onclick="switchMainTab('profile_tab', this)"><i class="fa fa-user-circle"></i>الملف الشخصي</div>
+        </nav>
+    </div>
+
+    <a class="floating-support-btn" href="https://t.me/Mer_oo1" target="_blank">
+        <i class="fab fa-telegram-plane"></i>
+    </a>
+
+    <div id="download_app_modal" class="modal">
+        <div class="modal-content" style="text-align: center; border-color: #00ffcc;">
+            <h3 id="download_title_text">تهيئة حزمة التطبيق المباشرة</h3>
+            <p style="font-size:11px; color:var(--text-dim); margin-top:5px;">يرجى الانتظار حتى تكتمل عملية الفحص وتأمين ملف الـ APK.</p>
+            
+            <div class="download-box">
+                <div class="progress-circle-bar" id="download_progress_circle">
+                    <div class="progress-circle-inner">
+                        <span id="download_percent_txt">0%</span>
+                        <span class="download-status-text" id="download_status_lbl">جاري الاتصال...</span>
+                    </div>
+                </div>
+            </div>
+
+            <div id="install_btn_container" style="display: none; margin-top:10px; animation: pulseSupport 1.5s infinite;">
+                <a href="https://www.mediafire.com/file/wedoslvmvix2wnv/AICONS.apk/file" target="_blank" class="btn" style="background: linear-gradient(90deg, #00ffcc, #00aa66); box-shadow: 0 0 15px #00ffcc; font-size:13px; font-weight:bold; letter-spacing:0.5px;" onclick="closeModal('download_app_modal')">
+                    <i class="fa fa-circle-down"></i> تثبيت التطبيق المباشر الآن
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div id="deposit_modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal('deposit_modal')">&times;</span>
+            <h3>بوابة شحن وإيداع الحساب السحابي</h3>
+            <div class="input-group">
+                <label>الخطوة 1: اختيار طريقة الإيداع</label>
+                <select id="dep_method_select" onchange="updateDepositMethodDetails()">
+                    <option value="TRC20-USDT">TRC20-USDT (المحفظة الرقمية الرئيسية)</option>
+                    <option value="BEP20-USDT">BEP20-USDT (الشبكة الذكية)</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label>الخطوة 2: عنوان محفظة الاستلام</label>
+                <div style="display:flex; gap:5px;">
+                    <input type="text" id="dep_wallet_address_display" value="TYv8Z6QZ7BvXf8v7RzU9mPqS2aB8xN4wKd" readonly style="text-align:center; color:var(--accent-blue); font-weight:bold;">
+                    <button class="btn" style="width:auto; padding:0 10px;" onclick="copyDepositWallet()"><i class="fa fa-copy"></i></button>
+                </div>
+            </div>
+            <div class="input-group">
+                <label>الخطوة 3: القيمة بالدولار</label>
+                <input type="number" id="dep_amount" placeholder="الحد الأدنى 30$">
+            </div>
+            <div class="input-group">
+                <label>الخطوة 4: صورة إيصال التحويل</label>
+                <input type="file" id="dep_receipt_file" accept="image/*" style="padding:5px;">
+                <input type="text" id="dep_vip_level_hidden" value="0" style="display:none;">
+            </div>
+            <button class="btn" onclick="submitDepositOrderWithReceipt()">تأكيد وإرسال طلب الإيداع</button>
+            <div id="user_dep_logs" style="margin-top:15px;"></div>
+        </div>
+    </div>
+
+    <div id="active_packages_modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal('active_packages_modal')">&times;</span>
+            <h3>تفاصيل باقاتك الاستثمارية النشطة</h3>
+            <div id="active_pkgs_list" style="margin-top:15px;">لا توجد باقات نشطة حالياً.</div>
+        </div>
+    </div>
+
+    <div id="withdraw_modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal('withdraw_modal')">&times;</span>
+            <h3>بوابة السحب الفوري الموثق</h3>
+            <div class="input-group no-label"><i class="fa fa-wallet"></i><input type="text" id="with_wallet" placeholder="عنوان محفظتك لاستلام USDT"></div>
+            <div class="input-group no-label"><i class="fa fa-dollar-sign"></i><input type="number" id="with_amount" placeholder="قيمة السحب ($30 - $9999)"></div>
+            <div class="input-group no-label"><i class="fa fa-lock"></i><input type="password" id="with_pass" placeholder="اكتب كلمة سر الحساب للتأكيد"></div>
+            <button class="btn" style="background:linear-gradient(90deg, #ff3366, var(--accent-purple));" onclick="submitWithdrawalOrder()">طلب سحب الرصيد المباشر</button>
+            <div id="user_with_logs" style="margin-top:15px;"></div>
+        </div>
+    </div>
+
+    <div id="notifications_modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal('notifications_modal')">&times;</span>
+            <h3>سجل التحركات السحابية وإشعارات السيرفر</h3>
+            <div id="noti_logs_wrapper" style="margin-top:10px; font-size:12px;">جاري تحميل سجل الأنشطة...</div>
+        </div>
+    </div>
+
+    <div id="vip_modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal('vip_modal')">&times;</span>
+            <h3>بوابة ترقيات ومميزات الـ VIP للمشاريع</h3>
+            <div id="vip_tiers_container"></div>
+            <h4 style="font-size:12px; margin-top:15px; color:var(--accent-blue);">سجل استثمارات وحالات الـ VIP:</h4>
+            <div id="vip_user_logs" style="margin-top:8px;"></div>
+        </div>
+    </div>
+
+    <div id="admin_modal" class="modal">
+        <div class="modal-content" style="max-width:92%; width:92%;">
+            <span class="close-btn" onclick="closeModal('admin_modal')">&times;</span>
+            <h3>لوحة التحكم والتحليلات للأدمن</h3>
+            <br>
+            <h4>إدارة طلبات شحن وإيداع الـ VIP والخطط العادية</h4>
+            <div id="admin_deposits_list" style="max-height:160px; overflow-y:auto; margin-bottom:15px; background:rgba(0,0,0,0.3); padding:5px;"></div>
+            <h4>إدارة طلبات سحب الأبرار المعلقة</h4>
+            <div id="admin_withdrawals_list" style="max-height:140px; overflow-y:auto; margin-bottom:15px; background:rgba(0,0,0,0.3); padding:5px;"></div>
+            <h4>قائمة المستخدمين وباقاتهم</h4>
+            <div id="admin_users_list" style="max-height:140px; overflow-y:auto; background:rgba(0,0,0,0.3); padding:5px;"></div>
+        </div>
+    </div>
+
+    <script>
+        const firebaseConfig = {
+            databaseURL: "https://pubgmobile-2d861-default-rtdb.firebaseio.com",
+            projectId: "pubgmobile-2d861"
+        };
+        
+        if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
+        const db = firebase.database();
+
+        let currentUid = null;
+        let userData = null;
+        let miningIntervalId = null;
+
+        const investmentPackages = [
+            { id: 1, cost: 50, payout: 3, name: "باقة تعدين النحاس AI" },
+            { id: 2, cost: 80, payout: 5, name: "باقة تعدين الفضة الفورية" },
+            { id: 3, cost: 180, payout: 7, name: "باقة تعدين الذهب المستدام" },
+            { id: 4, cost: 280, payout: 10, name: "باقة تعدين البلاتينيوم الذكي" },
+            { id: 5, cost: 500, payout: 18, name: "باقة التمويل العقاري العالمي" }
+        ];
+
+        const vipTiers = [
+            { level: 1, cost: 50, bonusPercent: 5, dailyGift: 1, name: "VIP 1", xpDaily: 10 },
+            { level: 2, cost: 125, bonusPercent: 7, dailyGift: 2, name: "VIP 2", xpDaily: 15 },
+            { level: 3, cost: 175, bonusPercent: 9, dailyGift: 4, name: "VIP 3", xpDaily: 20 },
+            { level: 4, cost: 250, bonusPercent: 10, dailyGift: 6, name: "VIP 4", xpDaily: 25 },
+            { level: 5, cost: 400, bonusPercent: 15, dailyGift: 10, name: "VIP 5", xpDaily: 40 }
+        ];
+
+        const real8kSliders = [
+            { img: "https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=800&q=80", badge: "تشغيل الأيدي العاملة 8K", desc: "إشراف ومتابعة حية لتشغيل الكوادر والعمال المهنيين في ورش خطوط الإنتاج والسيولة المتكاملة." },
+            { img: "https://images.unsplash.com/photo-1581094288338-2314dddb7ece?auto=format&fit=crop&w=800&q=80", badge: "معامل ومصانع الكهرباء", desc: "تغطية وتمويل محطات توليد وصيانة شبكات الطاقة الكهربائية لضمان استمرارية العوائد السحابية للمنصة." },
+            { img: "https://images.unsplash.com/photo-1513828583835-c541714b5bb6?auto=format&fit=crop&w=800&q=80", badge: "منشآت ومصانع الغاز 8K", desc: "عقود مضاربة واستثمار فوري في مصانع تكرير وضخ الغاز الطبيعي لتعزيز نمو المشاريع الصغيرة أونلاين." },
+            { img: "https://images.unsplash.com/photo-1541888946425-d81bb19240f5?auto=format&fit=crop&w=800&q=80", badge: "مشاريع البناء والإعمار", desc: "بناء وتجهيز البنى التحتية والمجمعات الحديثة المواكبة لحركة العولمة والذكاء الاصطناعي الاستثماري." }
+        ];
+
+        const economicNews = [
+            "🔴 عاجل: قفزة لأسعار الذهب الفوري بنسبة 4% بسبب زيادة الطلب على عقود الطاقة والمصانع الكبرى.",
+            "🔵 مؤشن ناسداك يحقق مستويات قياسية جديدة مدفوعاً بطلب عالي على خوارزميات التعدين الكمي.",
+            "🟢 الفيدرالي يلمح إلى استقرار أسعار الفائدة وتوجه مستثمري التجزئة لتعزيز المشاريع الصغيرة أونلاين.",
+            "🔴 صعود مفاجئ في حركة المحافظ السحابية المشفرة USDT لشبكات TRC20 تزامناً مع تداولات آسيا."
+        ];
+
+        const assetList = [
+            "USDT / TRC20", "Bitcoin (BTC)", "Ethereum (ETH)", "Solana (SOL)", "Binance Coin (BNB)", 
+            "Ripple (XRP)", "Cardano (ADA)", "Avalanche (AVAX)", "Polkadot (DOT)", "TRON (TRX)",
+            "عملة الذهب الفوري", "عقود الفضة الحية", "عقود الناسداك 100", "البرنت الخام النفطي", "عقود الغاز الطبيعي", 
+            "الين الياباني الحركي", "اليورو / دولار", "الباوند الإنجليزي", "داو جونز الصناعي", "النحاس المطور AI"
+        ];
+
+        window.onload = function() {
+            init8kSliders();
+            initCryptoPrices();
+            initNewsTicker();
+            renderInvestmentPlans();
+            renderVipTiers();
+            checkAutoLoginSession();
+        };
+
+        function triggerVisualLoading(callback) {
+            const screen = document.getElementById('loading_screen');
+            screen.style.display = 'flex';
+            setTimeout(() => { screen.style.display = 'none'; if(callback) callback(); }, 700);
+        }
+
+        function toggleAuth(showReg) {
+            document.getElementById('register_box').style.display = showReg ? 'block' : 'none';
+            document.getElementById('login_box').style.display = showReg ? 'none' : 'block';
+        }
+
+        function switchMainTab(tabId, el) {
+            triggerVisualLoading(() => {
+                document.querySelectorAll('.app-container').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
+                document.getElementById(tabId).classList.add('active');
+                if(el) el.classList.add('active');
+            });
+        }
+
+        function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+        function checkAutoLoginSession() {
+            const saved = localStorage.getItem('aicons_user_uid');
+            if(saved) { currentUid = saved; startRealtimeSync(); }
+        }
+
+        function actionRegister() {
+            const user = document.getElementById('reg_user').value.trim();
+            const email = document.getElementById('reg_email').value.trim();
+            const phone = document.getElementById('reg_country').value + document.getElementById('reg_phone').value.trim();
+            const pass = document.getElementById('reg_pass').value;
+            const ref = document.getElementById('reg_ref').value.trim();
+
+            if(!user || !email || !phone || !pass || !ref) { alert("❌ يرجى ملء كافة الخانات!"); return; }
+
+            triggerVisualLoading(() => {
+                db.ref('AICONS/users').orderByChild('username').equalTo(user).once('value', snap => {
+                    if(snap.exists()) { alert("❌ اسم المستخدم مأخوذ مسبقاً!"); }
+                    else {
+                        const uid = 'usr_' + Date.now();
+                        const data = {
+                            uid: uid, username: user, email: email, phone: phone, password: pass, referrer: ref,
+                            myRefCode: 'AIC_REF_' + Math.floor(1000 + Math.random()*9000),
+                            balance: 0.00, dailyProfit: 0.00, teamProfit: 0.00, xp: 0,
+                            activePackageId: 0, activePackagesList: {}, isAdmin: (user.toLowerCase() === 'admin'),
+                            lastMiningTimestamp: 0 
+                        };
+                        db.ref('AICONS/users/' + uid).set(data).then(() => {
+                            localStorage.setItem('aicons_user_uid', uid);
+                            currentUid = uid;
+                            pushLogAction("إنشاء حساب جديد بنجاح ومزامنة الجلسة السحابية.");
+                            startRealtimeSync();
+                        });
+                    }
+                });
+            });
+        }
+
+        function actionLogin() {
+            const email = document.getElementById('login_email').value.trim();
+            const pass = document.getElementById('login_pass').value;
+            if(!email || !pass) { alert("❌ يرجى ملء الحقول الأساسية!"); return; }
+
+            triggerVisualLoading(() => {
+                db.ref('AICONS/users').orderByChild('email').equalTo(email).once('value', snap => {
+                    if(snap.exists()) {
+                        let found = false;
+                        snap.forEach(c => {
+                            if(c.val().password === pass) {
+                                currentUid = c.key;
+                                localStorage.setItem('aicons_user_uid', currentUid);
+                                pushLogAction("تسجيل دخول ناجح واستعادة البيانات.");
+                                startRealtimeSync();
+                                found = true;
+                            }
+                        });
+                        if(!found) alert("❌ الرمز السري غير صحيح!");
+                    } else { alert("❌ البريد الإلكتروني غير مسجل مسبقاً!"); }
+                });
+            });
+        }
+
+        function startRealtimeSync() {
+            document.getElementById('auth_view').style.display = 'none';
+            document.getElementById('main_app_view').style.display = 'block';
+
+            db.ref('AICONS/users/' + currentUid).on('value', snap => {
+                if(!snap.exists()) return;
+                userData = snap.val();
+
+                document.getElementById('user_balance').innerText = parseFloat(userData.balance).toFixed(2) + " USDT";
+                document.getElementById('user_daily').innerText = parseFloat(userData.dailyProfit).toFixed(2) + "$";
+                document.getElementById('user_team_profit').innerText = parseFloat(userData.teamProfit).toFixed(2) + "$";
+                document.getElementById('xp_percent_text').innerText = (userData.xp || 0) + "%";
+                document.getElementById('xp_bar_fill').style.width = (userData.xp || 0) + "%";
+
+                document.getElementById('prof_name_display').innerText = userData.username;
+                document.getElementById('prof_phone_display').innerText = userData.phone;
+                document.getElementById('prof_email_display').innerText = userData.email;
+                document.getElementById('team_my_code').innerText = userData.myRefCode;
+
+                setupMiningCountdownLogic(userData.lastMiningTimestamp || 0);
+
+                let pkgsCount = 0;
+                let pkgsHtml = '';
+                if(userData.activePackagesList) {
+                    Object.keys(userData.activePackagesList).forEach(k => {
+                        pkgsCount++;
+                        let p = userData.activePackagesList[k];
+                        pkgsHtml += `<div class="log-box">📦 ${p.name} - تكلفة: $${p.cost} (العائد: +$${p.payout}/يوم)</div>`;
+                    });
+                    document.getElementById('active_pkgs_list').innerHTML = pkgsHtml;
+                } else {
+                    document.getElementById('active_pkgs_list').innerHTML = 'لا توجد باقات نشطة حالياً.';
+                }
+                document.getElementById('user_pkgs_count').innerText = pkgsCount + " باقة";
+
+                if(userData.isAdmin) { document.getElementById('admin_gate_btn').style.display = 'block'; }
+                
+                listenToTeamStructureLive();
+                loadPersonalTransactions();
+                loadVipUserLogs();
+            });
+
+            db.ref('AICONS/logs/' + currentUid).on('value', snap => {
+                const wrap = document.getElementById('noti_logs_wrapper'); wrap.innerHTML = '';
+                if(snap.exists()) {
+                    snap.forEach(c => {
+                        wrap.innerHTML += `<div class="log-box">🔔 [${new Date(c.val().time).toLocaleTimeString('ar-IQ')}] ${c.val().action}</div>`;
+                    });
+                    document.getElementById('noti_dot').style.display = 'block';
+                } else {
+                    wrap.innerHTML = 'سجل حركاتك فارغ حالياً.';
+                    document.getElementById('noti_dot').style.display = 'none';
+                }
+            });
+        }
+
+        function listenToTeamStructureLive() {
+            if (!userData || !userData.myRefCode) return;
+
+            db.ref('AICONS/users').orderByChild('referrer').equalTo(userData.myRefCode).on('value', snap => {
+                let active = 0, inactive = 0;
+                const listWrapper = document.getElementById('team_members_list_wrapper');
+                listWrapper.innerHTML = '';
+
+                if (snap.exists()) {
+                    snap.forEach(c => {
+                        let member = c.val();
+                        let isUserActive = (member.activePackageId > 0 || member.lastVipTimestamp > 0);
+                        
+                        if (isUserActive) active++; else inactive++;
+
+                        listWrapper.innerHTML += `
+                            <div class="team-member-item">
+                                <div>
+                                    <strong style="color: #fff; font-size:12px;">👤 ${member.username}</strong>
+                                    <div style="font-size: 10px; color: var(--text-dim); margin-top:2px;">📞 ${member.phone}</div>
+                                </div>
+                                <span style="font-size:10px; padding:2px 6px; border-radius:4px; font-weight:bold; ${isUserActive ? 'background:rgba(0,255,200,0.15); color:#00ffcc;' : 'background:rgba(255,50,100,0.15); color:#ff3366;'}">
+                                    ${isUserActive ? 'نشط (مستثمر)' : 'غير نشط'}
+                                </span>
+                            </div>
+                        `;
+                    });
+                } else {
+                    listWrapper.innerHTML = `<p style="font-size:11px; opacity:0.5; text-align:center; padding:10px;">لم يقم أي مستخدم بالتسجيل عبر كود إحالتك حتى الآن.</p>`;
+                }
+
+                let totalEarned = active * 15.00;
+                document.getElementById('active_team_count').innerText = active;
+                document.getElementById('inactive_team_count').innerText = inactive;
+                document.getElementById('team_total_bonus').innerText = totalEarned.toFixed(2) + "$";
+            });
+        }
+
+        // ==================== منطق ترقية التنزيل المتطور وتدرج الألوان المخصص ====================
+        function startAppDownloadProcess() {
+            openModal('download_app_modal');
+            
+            // إعادة تصفير الواجهة قبل البدء
+            document.getElementById('install_btn_container').style.display = 'none';
+            document.getElementById('download_title_text').innerText = "جاري تهيئة وتأمين ملف الحزمة...";
+            
+            let progress = 0;
+            const circle = document.getElementById('download_progress_circle');
+            const txt = document.getElementById('download_percent_txt');
+            const statusLbl = document.getElementById('download_status_lbl');
+            
+            const interval = setInterval(() => {
+                progress += 2; // سرعة تعبئة ذكية وحركية للعداد
+                txt.innerText = progress + "%";
+                
+                // حساب اللون الحركي المخصص بالتوازي مع قيمة التقدم (تغيير ألوان تفاعلي)
+                let currentColor = '#ff3366'; // أحمر في البداية
+                if (progress < 40) {
+                    currentColor = '#ff3366'; 
+                    statusLbl.innerText = "جاري جلب الملف...";
+                } else if (progress >= 40 && progress < 80) {
+                    currentColor = '#ffaa00'; // أصفر بالمنتصف
+                    statusLbl.innerText = "جاري فحص الأمان...";
+                    document.getElementById('download_title_text').innerText = "فحص الحزمة السحابية آلياً 🛡️";
+                } else {
+                    currentColor = '#00ffcc'; // أخضر فوسفوري عند الاكتمال والجاهزية
+                    statusLbl.innerText = "جاهز للتثبيت الفوري";
+                }
+                
+                // تحديث شكل ومظهر الخلفية المخروطية للعداد بالألوان المحدثة
+                circle.style.background = `conic-gradient(${currentColor} ${progress}%, #1a1e36 ${progress}%)`;
+                
+                if(progress >= 100) {
+                    clearInterval(interval);
+                    document.getElementById('download_title_text').innerText = "🎉 اكتمل تجهيز الحزمة بنجاح!";
+                    statusLbl.innerText = "اضغط لتثبيت الـ APK";
+                    // إظهار زر التثبيت المباشر المرتبط بميديا فاير
+                    document.getElementById('install_btn_container').style.display = 'block';
+                }
+            }, 80); // سرعة عد ممتازة تمنح المستخدم تجربة انتظار سلسة واحترافية
+        }
+
+        function setupMiningCountdownLogic(lastTimestamp) {
+            if(miningIntervalId) clearInterval(miningIntervalId);
+            const btn = document.getElementById('claim_earnings_btn');
+            const display = document.getElementById('countdown_display');
+            const statusLbl = document.getElementById('timer_status_label');
+            const dayInMs = 24 * 60 * 60 * 1000;
+            
+            function updateTimer() {
+                const now = Date.now();
+                const timePassed = now - lastTimestamp;
+                const timeRemaining = dayInMs - timePassed;
+
+                if (timeRemaining > 0 && lastTimestamp > 0) {
+                    btn.style.display = 'none';
+                    btn.disabled = true;
+                    statusLbl.innerText = "جاري التعدين والتمويل...";
+                    statusLbl.style.color = "var(--accent-purple)";
+
+                    let totalSeconds = Math.floor(timeRemaining / 1000);
+                    let hours = Math.floor(totalSeconds / 3600);
+                    let minutes = Math.floor((totalSeconds % 3600) / 60);
+                    let seconds = totalSeconds % 60;
+
+                    display.innerText = (hours < 10 ? "0" : "") + hours + ":" + (minutes < 10 ? "0" : "") + minutes + ":" + (seconds < 10 ? "0" : "") + seconds;
+                } else {
+                    clearInterval(miningIntervalId);
+                    btn.style.display = 'inline-block';
+                    btn.disabled = false;
+                    display.innerText = "24:00:00";
+                    statusLbl.innerText = "جاهز للاستلام";
+                    statusLbl.style.color = "var(--accent-blue)";
+                }
+            }
+            updateTimer();
+            miningIntervalId = setInterval(updateTimer, 1000);
+        }
+
+        function triggerMiningDay() {
+            if(!userData || !userData.activePackageId || userData.activePackageId === 0) { 
+                alert("⚠️ يرجى شحن وتفعيل باقة استثمارية أولاً لبدء دورات الـ 24 ساعة وتوليد الأرباح!"); 
+                return; 
+            }
+            triggerVisualLoading(() => {
+                let totalPayout = 0;
+                if(userData.activePackagesList) {
+                    Object.keys(userData.activePackagesList).forEach(k => { totalPayout += parseFloat(userData.activePackagesList[k].payout); });
+                }
+                const newTimestamp = Date.now();
+                db.ref('AICONS/users/' + currentUid).transaction(user => {
+                    if(user) { 
+                        user.balance = (parseFloat(user.balance) || 0) + totalPayout; 
+                        user.dailyProfit = totalPayout;
+                        user.lastMiningTimestamp = newTimestamp;
+                    }
+                    return user;
+                }).then(() => {
+                    pushLogAction(`استلام العائد اليومي بقيمة $${totalPayout}.`);
+                    alert(`💰 تم تجميع عوائد باقاتك بنجاح: +$${totalPayout}.`);
+                });
+            });
+        }
+
+        function pushLogAction(text) {
+            if(!currentUid) return;
+            db.ref('AICONS/logs/' + currentUid).push({ action: text, time: Date.now() });
+        }
+
+        function init8kSliders() {
+            let idx = 0;
+            const setSlider = (i) => {
+                document.getElementById('slider_img').src = real8kSliders[i].img;
+                document.getElementById('slider_badge_lbl').innerText = real8kSliders[i].badge;
+                document.getElementById('slider_text_lbl').innerText = real8kSliders[i].desc;
+            };
+            setSlider(0);
+            setInterval(() => { idx = (idx + 1) % real8kSliders.length; setSlider(idx); }, 5000);
+        }
+
+        function updateDepositMethodDetails() {
+            const method = document.getElementById('dep_method_select').value;
+            const walletInput = document.getElementById('dep_wallet_address_display');
+            if(method === 'TRC20-USDT') {
+                walletInput.value = "TYv8Z6QZ7BvXf8v7RzU9mPqS2aB8xN4wKd";
+            } else {
+                walletInput.value = "0x7Bc7E4f87a32A9C0f9dB81C65EEdA5d63f2b";
+            }
+        }
+
+        function copyDepositWallet() {
+            const val = document.getElementById('dep_wallet_address_display').value;
+            navigator.clipboard.writeText(val).then(() => alert("🔗 تم نسخ عنوان محفظة الإيداع بنجاح!"));
+        }
+
+        function submitDepositOrderWithReceipt() {
+            const method = document.getElementById('dep_method_select').value;
+            const amount = parseFloat(document.getElementById('dep_amount').value);
+            const receiptFile = document.getElementById('dep_receipt_file').files[0];
+            const vipLevel = parseInt(document.getElementById('dep_vip_level_hidden').value) || 0;
+
+            if(!amount || amount < 30) { alert("❌ الحد الأدنى لتقديم أي طلب إيداع هو 30$"); return; }
+            if(!receiptFile) { alert("❌ يرجى اختيار وإرفاق صورة إيصال التحويل!"); return; }
+
+            triggerVisualLoading(() => {
+                const reader = new FileReader();
+                reader.onloadend = function() {
+                    const base64Receipt = reader.result;
+                    const key = db.ref('AICONS/deposits').push().key;
+                    
+                    const depositPayload = {
+                        id: key, uid: currentUid, username: userData.username, amount: amount,
+                        status: "قيد المراجعة الفورية", method: method, receipt: base64Receipt,
+                        type: vipLevel > 0 ? `VIP ${vipLevel}` : "شحن عادي", vipLevel: vipLevel, time: Date.now()
+                    };
+
+                    db.ref('AICONS/deposits/' + key).set(depositPayload).then(() => {
+                        pushLogAction(`إرسال طلب إيداع ${depositPayload.type} بقيمة ${amount} USDT.`);
+                        alert("📥 تم رفع إيصالك بنجاح! طلبك الآن تحت التدقيق السحابي.");
+                        closeModal('deposit_modal');
+                    });
+                };
+                reader.readAsDataURL(receiptFile);
+            });
+        }
+
+        function renderVipTiers() {
+            const box = document.getElementById('vip_tiers_container'); box.innerHTML = '';
+            vipTiers.forEach(v => {
+                box.innerHTML += `
+                    <div class="user-main-card" style="background: linear-gradient(135deg, #2c2112 0%, #15112c 100%); border: 1px solid #ffaa00;">
+                        <h4 style="color:#ffaa00;"><i class="fa fa-crown"></i> تفاصيل باقة ${v.name}</h4>
+                        <div style="font-size:11px; margin-top:4px; line-height:1.7;">
+                            • قيمة تفعيل الاشتراك: <span style="color:var(--accent-blue); font-weight:bold;">${v.cost} USDT</span><br>
+                            • الراتب الهدية المباشر: <span style="color:#00ffcc;">$${v.dailyGift} يومياً</span> يتم ضخه للحساب<br>
+                            • نقاط الخبرة التراكمية: <span style="color:#ffaa00; font-weight:bold;">+${v.xpDaily} XP يومياً</span><br>
+                            • مؤقت التشغيل الإجمالي: <span style="color:var(--text-dim);">10 أيام متتالية</span>
+                        </div>
+                        <button class="btn" style="background:linear-gradient(90deg, #ffaa00, #9d4edd); margin-top:10px; padding:5px; font-size:11px;" onclick="triggerVipActivationFlow(${v.level}, ${v.cost})">تفعيل والاشتراك في ${v.name} الآن</button>
+                    </div>
+                `;
+            });
+        }
+
+        function triggerVipActivationFlow(level, cost) {
+            closeModal('vip_modal');
+            openModal('deposit_modal');
+            document.getElementById('dep_method_select').value = "TRC20-USDT";
+            updateDepositMethodDetails();
+            document.getElementById('dep_amount').value = cost;
+            document.getElementById('dep_vip_level_hidden').value = level;
+        }
+
+        function loadVipUserLogs() {
+            db.ref('AICONS/vip_investments').orderByChild('uid').equalTo(currentUid).on('value', snap => {
+                const box = document.getElementById('vip_user_logs'); box.innerHTML = '';
+                if(snap.exists()) {
+                    snap.forEach(c => {
+                        let v = c.val();
+                        let target = vipTiers.find(t => t.level === v.vipLevel) || { xpDaily: 10, dailyGift: 1 };
+                        box.innerHTML += `
+                            <div class="log-box" style="border-right: 3px solid #ffaa00; line-height:1.8;">
+                                🎯 <strong>مستوى VIP ${v.vipLevel} المشترك به</strong><br>
+                                • حالة الخطة: <span style="color:#00ffcc;">${v.status}</span><br>
+                                • أيام التشغيل المكتملة: ${v.daysCompleted} من أصل 10 أيام
+                            </div>`;
+                    });
+                } else {
+                    box.innerHTML = '<p style="font-size:11px; opacity:0.5;">لا توجد خطط واستثمارات VIP مفعلة ومقيدة حالياً.</p>';
+                }
+            });
+        }
+
+        function buyRegularPlan(id, cost) {
+            if(!userData) return;
+            if(userData.balance < cost) { alert("❌ رصيدك الحالي غير كافٍ!"); return; }
+            triggerVisualLoading(() => {
+                db.ref('AICONS/users/' + currentUid).transaction(user => {
+                    if(user) {
+                        user.balance = parseFloat(user.balance) - cost;
+                        if(!user.activePackagesList) user.activePackagesList = {};
+                        let itemKey = 'pkg_' + Date.now();
+                        let target = investmentPackages.find(p => p.id === id);
+                        user.activePackagesList[itemKey] = { id: id, cost: cost, payout: target.payout, name: target.name, timestamp: Date.now() };
+                        user.xp = (parseInt(user.xp) || 0) + 15;
+                        if(user.xp >= 100) { user.xp = 0; user.balance = parseFloat(user.balance) + 50; }
+                        user.activePackageId = id;
+                    }
+                    return user;
+                }).then(() => {
+                    pushLogAction(`شراء باقة عادية بقيمة ${cost} USDT.`);
+                    alert("✅ تم الاشتراك وتنشيط خطتك الاستثمارية العادية بنجاح!");
+                });
+            });
+        }
+
+        function submitWithdrawalOrder() {
+            const wallet = document.getElementById('with_wallet').value.trim();
+            const amount = parseFloat(document.getElementById('with_amount').value);
+            const pass = document.getElementById('with_pass').value;
+
+            if(!wallet || !amount || !pass) { alert("❌ يرجى ملء كافة الخانات!"); return; }
+            if(pass !== userData.password) { alert("❌ تأكيد الرمز السري خاطئ!"); return; }
+            if(userData.balance < amount) { alert("❌ رصيدك الحالي غير كافٍ!"); return; }
+
+            triggerVisualLoading(() => {
+                db.ref('AICONS/users/' + currentUid).transaction(user => { if(user) { user.balance = parseFloat(user.balance) - amount; } return user; }).then(() => {
+                    const key = db.ref('AICONS/withdrawals').push().key;
+                    db.ref('AICONS/withdrawals/' + key).set({ id: key, uid: currentUid, username: userData.username, amount: amount, wallet: wallet, status: "قيد المراجعة السحابية", time: Date.now() })
+                    .then(() => {
+                        pushLogAction(`طلب سحب رصيد بقيمة ${amount} USDT.`);
+                        alert("✅ تم رفع طلب السحب بنجاح.");
+                        closeModal('withdraw_modal');
+                    });
+                });
+            });
+        }
+
+        function loadPersonalTransactions() {
+            db.ref('AICONS/deposits').orderByChild('uid').equalTo(currentUid).on('value', snap => {
+                const div = document.getElementById('user_dep_logs'); div.innerHTML = '<h4>سجل طلبات الإيداع والـ VIP الحالية:</h4>';
+                if(snap.exists()) {
+                    snap.forEach(c => {
+                        div.innerHTML += `<div class="log-box">طلب ${c.val().type}: $${c.val().amount} | <span style="color:#ffaa00;">${c.val().status}</span></div>`;
+                    });
+                }
+            });
+            db.ref('AICONS/withdrawals').orderByChild('uid').equalTo(currentUid).on('value', snap => {
+                const div = document.getElementById('user_with_logs'); div.innerHTML = '<h4>سجل السحوبات:</h4>';
+                if(snap.exists()) {
+                    snap.forEach(c => { div.innerHTML += `<div class="log-box">سحب: $${c.val().amount} | <span style="color:#ff3366;">${c.val().status}</span></div>`; });
+                }
+            });
+        }
+
+        function copyReferralLink() {
+            navigator.clipboard.writeText(`سجل في منصة AICONS وابدأ تشغيل واستثمار أموالك، كود إحالتي هو: ${userData.myRefCode}`)
+            .then(() => alert("🔗 تم نسخ رابط وكود دعوة فريقك بنجاح!"));
+        }
+
+        function initCryptoPrices() {
+            const grid = document.getElementById('crypto_market_prices'); grid.innerHTML = '';
+            assetList.forEach(asset => { 
+                grid.innerHTML += `<div class="crypto-item"><span>${asset}</span><span id="price_${asset.replace(/[^a-zA-Z0-9]/g, '')}" style="color:#00ffcc; font-weight:bold;">$${Math.floor(30 + Math.random()*2500)}</span></div>`; 
+            });
+            setInterval(() => {
+                assetList.forEach(asset => {
+                    const el = document.getElementById(`price_${asset.replace(/[^a-zA-Z0-9]/g, '')}`);
+                    if(el) {
+                        let currentVal = parseFloat(el.innerText.replace('$', '').replace(/,/g, ''));
+                        let change = (Math.random() * 4 - 2).toFixed(2);
+                        let newVal = (currentVal + parseFloat(change));
+                        if(newVal < 1) newVal = 10;
+                        el.innerText = `$${newVal.toFixed(2)}`;
+                        el.style.color = change >= 0 ? '#00ffcc' : '#ff3366';
+                    }
+                });
+            }, 3000);
+        }
+
+        function initNewsTicker() {
+            const box = document.getElementById('economy_news_box'); let idx = 0; box.innerText = economicNews[0];
+            setInterval(() => { idx = (idx + 1) % economicNews.length; box.innerText = economicNews[idx]; }, 5000);
+        }
+
+        function renderInvestmentPlans() {
+            const wrapper = document.getElementById('packages_list_wrapper'); wrapper.innerHTML = '';
+            investmentPackages.forEach(p => {
+                wrapper.innerHTML += `
+                    <div class="user-main-card" style="border-right: 4px solid var(--accent-purple);">
+                        <h4>${p.name}</h4>
+                        <p style="font-size:12px; margin:4px 0; color:var(--accent-blue);">تكلفة التنشيط: ${p.cost} USDT</p>
+                        <p style="font-size:11px; color:var(--text-dim);">العائد اليومي: +$${p.payout}</p>
+                        <button class="btn" style="margin-top:8px; padding:5px;" onclick="buyRegularPlan(${p.id}, ${p.cost})">شحن وتفعيل الحزمة</button>
+                    </div>
+                `;
+            });
+        }
+
+        function logoutSession() { localStorage.removeItem('aicons_user_uid'); location.reload(); }
+
+        function openAdminDashboard() { openModal('admin_modal'); loadAdminMasterData(); }
+        function loadAdminMasterData() {
+            db.ref('AICONS/deposits').on('value', snap => {
+                const div = document.getElementById('admin_deposits_list'); div.innerHTML = '';
+                if(snap.exists()) {
+                    snap.forEach(c => {
+                        let d = c.val();
+                        let receiptBtn = d.receipt ? `<button class="btn" style="width:auto; padding:2px 5px; font-size:10px; background:#555;" onclick="window.open('${d.receipt}')">عرض الإيصال 🖼️</button>` : '';
+                        let actBtn = d.status.includes('المراجعة') ? 
+                            `<button class="btn" style="width:auto; padding:2px 6px; font-size:10px; display:inline-block;" onclick="approveDepositMaster('${d.id}', '${d.uid}', ${d.amount}, '${d.type}', ${d.vipLevel || 0})">موافقة وتفعيل فوري</button>` : `تم القبول`;
+                        div.innerHTML += `<div style="font-size:11px; margin-bottom:6px; border-bottom:1px solid #222; padding-bottom:3px;">👤 ${d.username} | ${d.type} | مبلغ: $${d.amount} | ${receiptBtn} -> ${actBtn}</div>`;
+                    });
+                } else { div.innerHTML = 'لا توجد طلبات معلقة.'; }
+            });
+
+            db.ref('AICONS/withdrawals').on('value', snap => {
+                const div = document.getElementById('admin_withdrawals_list'); div.innerHTML = '';
+                if(snap.exists()) {
+                    snap.forEach(c => {
+                        let w = c.val();
+                        let btn = w.status.includes('المراجعة') ? `<button class="btn" style="width:auto; padding:2px 6px; font-size:10px; background:red;" onclick="approveWithdrawalMaster('${w.id}')">إتمام ودفع السحب</button>` : `تم الدفع`;
+                        div.innerHTML += `<div style="font-size:11px; margin-bottom:5px;">👤 ${w.username} | $${w.amount} -> ${btn}</div>`;
+                    });
+                }
+            });
+
+            db.ref('AICONS/users').on('value', snap => {
+                const div = document.getElementById('admin_users_list'); div.innerHTML = '';
+                if(snap.exists()) { snap.forEach(c => { div.innerHTML += `<div style="font-size:11px;">👤 الاسم: ${c.val().username} | رصيد: $${parseFloat(c.val().balance).toFixed(2)} USDT</div>`; }); }
+            });
+        }
+
+        function approveDepositMaster(depId, uid, amount, type, vipLevel) {
+            triggerVisualLoading(() => {
+                if(type.includes('VIP')) {
+                    const vipKey = 'vip_active_' + Date.now();
+                    db.ref('AICONS/vip_investments/' + vipKey).set({ id: vipKey, uid: uid, vipLevel: vipLevel, cost: amount, daysCompleted: 0, status: "نشط ومقيد التسييل", timestamp: Date.now() });
+                    let targetVip = vipTiers.find(v => v.level === vipLevel);
+                    db.ref('AICONS/users/' + uid).update({ activePackageId: 999, lastVipTimestamp: Date.now() });
+                } else {
+                    db.ref('AICONS/users/' + uid).transaction(user => { if(user) { user.balance = (parseFloat(user.balance) || 0) + amount; } return user; });
+                }
+                db.ref('AICONS/deposits/' + depId).update({ status: "✅ تمت الموافقة" }).then(() => { alert("🎉 تم اعتماد الدفع."); loadAdminMasterData(); });
+            });
+        }
+
+        function approveWithdrawalMaster(witId) {
+            triggerVisualLoading(() => {
+                db.ref('AICONS/withdrawals/' + witId).update({ status: "✅ تمت معالجة السحب بنجاح" }).then(() => { alert("✅ تم إتمام السحب."); loadAdminMasterData(); });
+            });
+        }
+    </script>
+</body>
+</html>
