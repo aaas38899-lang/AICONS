@@ -209,6 +209,13 @@
             50% { transform: scale(1.06); box-shadow: 0 4px 22px rgba(0, 136, 204, 0.7); }
             100% { transform: scale(1); box-shadow: 0 4px 15px rgba(0, 136, 204, 0.4); }
         }
+
+        /* تنسيقات الصورة الشخصية المضافة */
+        .profile-avatar {
+            width: 75px; height: 75px; border-radius: 50%; object-fit: cover;
+            border: 2px solid var(--accent-blue); margin-bottom: 10px;
+            box-shadow: 0 0 10px var(--accent-blue);
+        }
     </style>
 </head>
 <body>
@@ -244,6 +251,10 @@
             <div class="input-group no-label"><i class="fa fa-phone"></i><input type="tel" id="reg_phone" placeholder="رقم الهاتف الخاص بك"></div>
             <div class="input-group no-label"><i class="fa fa-lock"></i><input type="password" id="reg_pass" placeholder="الرمز السري"></div>
             <div class="input-group no-label"><i class="fa fa-gift"></i><input type="text" id="reg_ref" placeholder="كود الإحالة (إجباري)"></div>
+            <div class="input-group">
+                <label><i class="fa fa-image"></i> تحميل الصورة الشخصية للحساب</label>
+                <input type="file" id="reg_avatar_file" accept="image/*" style="padding:5px;">
+            </div>
             
             <button class="btn" onclick="actionRegister()">إنشاء حساب جديد ومزامنة</button>
             <button class="btn btn-secondary" onclick="toggleAuth(false)">لديك حساب مسبق؟ تسجيل الدخول</button>
@@ -360,10 +371,16 @@
         <div id="profile_tab" class="app-container">
             <h2>الملف الشخصي الآمن</h2>
             <div class="user-main-card" style="text-align:center;">
-                <i class="fa fa-user-gear" style="font-size:35px; color:var(--accent-purple); margin-bottom:10px;"></i>
+                <img id="prof_avatar_display" src="" alt="Avatar" class="profile-avatar" style="display:none;">
+                <i id="prof_avatar_icon" class="fa fa-user-gear" style="font-size:35px; color:var(--accent-purple); margin-bottom:10px;"></i>
                 <h3 id="prof_name_display" style="color:#fff;">---</h3>
                 <p style="font-size:11px; color:var(--text-dim);" id="prof_phone_display">---</p>
                 <p style="font-size:11px; color:var(--text-dim);" id="prof_email_display">---</p>
+                
+                <div style="margin-top:15px; border-top:1px solid rgba(255,255,255,0.1); padding-top:10px; text-align:right; font-size:12px; line-height:1.8;">
+                    <div><i class="fa fa-gift" style="color:var(--accent-blue);"></i> رمز الإحالة الداخلي: <strong id="prof_ref_code" style="color:#fff;">---</strong></div>
+                    <div><i class="fa fa-cubes" style="color:var(--accent-purple);"></i> عدد الباقات الاستثمارية النشطة: <strong id="prof_active_pkgs" style="color:#00ffcc;">0 باقة</strong></div>
+                </div>
             </div>
 
             <button class="btn" style="background: linear-gradient(90deg, #ffaa00, #ff5500); margin-bottom:10px;" onclick="openModal('vip_modal')"><i class="fa fa-crown"></i> ترقية الحساب وميزات VIP</button>
@@ -409,29 +426,57 @@
         <div class="modal-content">
             <span class="close-btn" onclick="closeModal('deposit_modal')">×</span>
             <h3>بوابة شحن وإيداع الحساب السحابي</h3>
+            
             <div class="input-group">
                 <label>الخطوة 1: اختيار طريقة الإيداع</label>
                 <select id="dep_method_select" onchange="updateDepositMethodDetails()">
-                    <option value="TRC20-USDT">TRC20-USDT (المحفظة الرقمية الرئيسية)</option>
-                    <option value="BEP20-USDT">BEP20-USDT (الشبكة الذكية)</option>
+                    <option value="TRON TRC-20">TRON (TRC-20)</option>
+                    <option value="TRC20-USDT Binance">حساب بايننس TRC20-USDT</option>
+                    <option value="Asiacell">رصيد آسياسيل (كارت)</option>
+                    <option value="Zain Al-Atheer">رصيد زين أثير</option>
                 </select>
             </div>
-            <div class="input-group">
-                <label>الخطوة 2: عنوان محفظة الاستلام</label>
-                <div style="display:flex; gap:5px;">
-                    <input type="text" id="dep_wallet_address_display" value="TYv8Z6QZ7BvXf8v7RzU9mPqS2aB8xN4wKd" readonly style="text-align:center; color:var(--accent-blue); font-weight:bold;">
-                    <button class="btn" style="width:auto; padding:0 10px;" onclick="copyDepositWallet()"><i class="fa fa-copy"></i></button>
+
+            <div id="crypto_deposit_fields">
+                <div class="input-group">
+                    <label>الخطوة 2: عنوان محفظة الاستلام المقررة</label>
+                    <div style="display:flex; gap:5px;">
+                        <input type="text" id="dep_wallet_address_display" value="TKFgYD4vgVYY2y2CTZuqbuitEgLte7xKPo" readonly style="text-align:center; color:var(--accent-blue); font-weight:bold;">
+                        <button class="btn" style="width:auto; padding:0 10px;" onclick="copyDepositWallet()"><i class="fa fa-copy"></i></button>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>الخطوة 3: صورة إيصال التحويل الناجح</label>
+                    <input type="file" id="dep_receipt_file" accept="image/*" style="padding:5px;">
                 </div>
             </div>
-            <div class="input-group">
-                <label>الخطوة 3: القيمة بالدولار</label>
-                <input type="number" id="dep_amount" placeholder="الحد الأدنى 30$">
+
+            <div id="card_deposit_fields" style="display:none;">
+                <div class="input-group">
+                    <label>الخطوة 2: صورة الكارت المعبأ</label>
+                    <input type="file" id="dep_card_image" accept="image/*" style="padding:5px;">
+                </div>
+                <div class="input-group">
+                    <label>الخطوة 3: قيمة الكارت الفئة السعرية ($)</label>
+                    <select id="dep_card_value">
+                        <option value="15">كارت فئة 15 دولار</option>
+                        <option value="30">كارت فئة 30 دولار</option>
+                        <option value="50">كارت فئة 50 دولار</option>
+                        <option value="100">كارت فئة 100 دولار</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label>الخطوة 4: كتابة رقم الكارت السري</label>
+                    <input type="text" id="dep_card_number" placeholder="اكتب الأرقام السرية هنا بدقة">
+                </div>
             </div>
+
             <div class="input-group">
-                <label>الخطوة 4: صورة إيصال التحويل</label>
-                <input type="file" id="dep_receipt_file" accept="image/*" style="padding:5px;">
+                <label>القيمة الإجمالية المراد شحنها بالدولار ($)</label>
+                <input type="number" id="dep_amount" placeholder="الحد الأدنى الفوري 15$" value="15">
                 <input type="text" id="dep_vip_level_hidden" value="0" style="display:none;">
             </div>
+
             <button class="btn" onclick="submitDepositOrderWithReceipt()">تأكيد وإرسال طلب الإيداع</button>
             <div id="user_dep_logs" style="margin-top:15px;"></div>
         </div>
@@ -450,7 +495,7 @@
             <span class="close-btn" onclick="closeModal('withdraw_modal')">×</span>
             <h3>بوابة السحب الفوري الموثق</h3>
             <div class="input-group no-label"><i class="fa fa-wallet"></i><input type="text" id="with_wallet" placeholder="عنوان محفظتك لاستلاف USDT"></div>
-            <div class="input-group no-label"><i class="fa fa-dollar-sign"></i><input type="number" id="with_amount" placeholder="قيمة السحب ($30 - $9999)"></div>
+            <div class="input-group no-label"><i class="fa fa-dollar-sign"></i><input type="number" id="with_amount" placeholder="قيمة السحب ($15 - $9999)"></div>
             <div class="input-group no-label"><i class="fa fa-lock"></i><input type="password" id="with_pass" placeholder="اكتب كلمة سر الحساب للتأكيد"></div>
             <button class="btn" style="background:linear-gradient(90deg, #ff3366, var(--accent-purple));" onclick="submitWithdrawalOrder()">طلب سحب الرصيد المباشر</button>
             <div id="user_with_logs" style="margin-top:15px;"></div>
@@ -480,7 +525,7 @@
             <span class="close-btn" onclick="closeModal('admin_modal')">×</span>
             <h3>لوحة التحكم والتحليلات للأدمن</h3>
             <br>
-            <h4>إدارة طلبات شحن وإيداع الـ VIP والخطط العادية</h4>
+            <h4>إدارة طلبات شحن وإيداع الـ VIP والخطط العادية الكروت</h4>
             <div id="admin_deposits_list" style="max-height:160px; overflow-y:auto; margin-bottom:15px; background:rgba(0,0,0,0.3); padding:5px;"></div>
             <h4>إدارة طلبات سحب الأبرار المعلقة</h4>
             <div id="admin_withdrawals_list" style="max-height:140px; overflow-y:auto; margin-bottom:15px; background:rgba(0,0,0,0.3); padding:5px;"></div>
@@ -590,29 +635,40 @@
             const phone = document.getElementById('reg_country').value + document.getElementById('reg_phone').value.trim();
             const pass = document.getElementById('reg_pass').value;
             const ref = document.getElementById('reg_ref').value.trim();
+            const avatarFile = document.getElementById('reg_avatar_file').files[0];
 
-            if(!user || !email || !phone || !pass || !ref) { alert("❌ يرجى ملء كافة الخانات!"); return; }
+            if(!user || !email || !phone || !pass || !ref) { alert("❌ يرجى ملء كافة الخانات الأساسية!"); return; }
 
             triggerVisualLoading(() => {
-                db.ref('AICONS/users').orderByChild('username').equalTo(user).once('value', snap => {
-                    if(snap.exists()) { alert("❌ اسم المستخدم مأخوذ مسبقاً!"); }
-                    else {
-                        const uid = 'usr_' + Date.now();
-                        const data = {
-                            uid: uid, username: user, email: email, phone: phone, password: pass, referrer: ref,
-                            myRefCode: 'AIC_REF_' + Math.floor(1000 + Math.random()*9000),
-                            balance: 0.00, dailyProfit: 0.00, teamProfit: 0.00, xp: 0,
-                            activePackageId: 0, activePackagesList: {}, isAdmin: (user.toLowerCase() === 'admin'),
-                            lastMiningTimestamp: 0 
-                        };
-                        db.ref('AICONS/users/' + uid).set(data).then(() => {
-                            localStorage.setItem('aicons_user_uid', uid);
-                            currentUid = uid;
-                            pushLogAction("إنشاء حساب جديد بنجاح ومزامنة الجلسة السحابية.");
-                            startRealtimeSync();
-                        });
-                    }
-                });
+                const proceedRegistration = (avatarBase64 = "") => {
+                    db.ref('AICONS/users').orderByChild('username').equalTo(user).once('value', snap => {
+                        if(snap.exists()) { alert("❌ اسم المستخدم مأخوذ مسبقاً!"); }
+                        else {
+                            const uid = 'usr_' + Date.now();
+                            const data = {
+                                uid: uid, username: user, email: email, phone: phone, password: pass, referrer: ref,
+                                myRefCode: 'AIC_REF_' + Math.floor(1000 + Math.random()*9000),
+                                balance: 0.00, dailyProfit: 0.00, teamProfit: 0.00, xp: 0,
+                                activePackageId: 0, activePackagesList: {}, isAdmin: (user.toLowerCase() === 'admin'),
+                                lastMiningTimestamp: 0, avatar: avatarBase64
+                            };
+                            db.ref('AICONS/users/' + uid).set(data).then(() => {
+                                localStorage.setItem('aicons_user_uid', uid);
+                                currentUid = uid;
+                                pushLogAction("إنشاء حساب جديد بنجاح ومزامنة الصورة الشخصية.");
+                                startRealtimeSync();
+                            });
+                        }
+                    });
+                };
+
+                if (avatarFile) {
+                    const reader = new FileReader();
+                    reader.onloadend = function() { proceedRegistration(reader.result); };
+                    reader.readAsDataURL(avatarFile);
+                } else {
+                    proceedRegistration("");
+                }
             });
         }
 
@@ -654,10 +710,21 @@
                 document.getElementById('xp_percent_text').innerText = (userData.xp || 0) + "%";
                 document.getElementById('xp_bar_fill').style.width = (userData.xp || 0) + "%";
 
+                // تحديث واجهة الملف الشخصي بالمعطيات الجديدة
                 document.getElementById('prof_name_display').innerText = userData.username;
                 document.getElementById('prof_phone_display').innerText = userData.phone;
                 document.getElementById('prof_email_display').innerText = userData.email;
                 document.getElementById('team_my_code').innerText = userData.myRefCode;
+                document.getElementById('prof_ref_code').innerText = userData.myRefCode;
+
+                if (userData.avatar && userData.avatar !== "") {
+                    document.getElementById('prof_avatar_display').src = userData.avatar;
+                    document.getElementById('prof_avatar_display').style.display = 'inline-block';
+                    document.getElementById('prof_avatar_icon').style.display = 'none';
+                } else {
+                    document.getElementById('prof_avatar_display').style.display = 'none';
+                    document.getElementById('prof_avatar_icon').style.display = 'inline-block';
+                }
 
                 setupMiningCountdownLogic(userData.lastMiningTimestamp || 0);
 
@@ -674,6 +741,7 @@
                     document.getElementById('active_pkgs_list').innerHTML = 'لا توجد باقات نشطة حالياً.';
                 }
                 document.getElementById('user_pkgs_count').innerText = pkgsCount + " باقة";
+                document.getElementById('prof_active_pkgs').innerText = pkgsCount + " باقة";
 
                 if(userData.isAdmin) { document.getElementById('admin_gate_btn').style.display = 'block'; }
                 
@@ -854,10 +922,21 @@
         function updateDepositMethodDetails() {
             const method = document.getElementById('dep_method_select').value;
             const walletInput = document.getElementById('dep_wallet_address_display');
-            if(method === 'TRC20-USDT') {
-                walletInput.value = "TYv8Z6QZ7BvXf8v7RzU9mPqS2aB8xN4wKd";
+            const cryptoFields = document.getElementById('crypto_deposit_fields');
+            const cardFields = document.getElementById('card_deposit_fields');
+
+            if (method === 'Asiacell' || method === 'Zain Al-Atheer') {
+                cryptoFields.style.display = 'none';
+                cardFields.style.display = 'block';
             } else {
-                walletInput.value = "0x7Bc7E4f87a32A9C0f9dB81C65EEdA5d63f2b";
+                cryptoFields.style.display = 'block';
+                cardFields.style.display = 'none';
+                
+                if(method === 'TRON TRC-20') {
+                    walletInput.value = "TKFgYD4vgVYY2y2CTZuqbuitEgLte7xKPo";
+                } else if(method === 'TRC20-USDT Binance') {
+                    walletInput.value = "THgE56mjh7oi4A7mn2BwsPRPbrbx5geJdq";
+                }
             }
         }
 
@@ -869,31 +948,52 @@
         function submitDepositOrderWithReceipt() {
             const method = document.getElementById('dep_method_select').value;
             const amount = parseFloat(document.getElementById('dep_amount').value);
-            const receiptFile = document.getElementById('dep_receipt_file').files[0];
             const vipLevel = parseInt(document.getElementById('dep_vip_level_hidden').value) || 0;
 
-            if(!amount || amount < 30) { alert("❌ الحد الأدنى لتقديم أي طلب إيداع هو 30$"); return; }
-            if(!receiptFile) { alert("❌ يرجى اختيار وإرفاق صورة إيصال التحويل!"); return; }
+            // تحديث الحد الأدنى للإيداع ليكون 15 دولار
+            if(!amount || amount < 15) { alert("❌ الحد الأدنى لتقديم أي طلب إيداع مالي هو 15$"); return; }
 
             triggerVisualLoading(() => {
-                const reader = new FileReader();
-                reader.onloadend = function() {
-                    const base64Receipt = reader.result;
+                const sendPayload = (fileData = "", extraInfo = {}) => {
                     const key = db.ref('AICONS/deposits').push().key;
-                    
                     const depositPayload = {
                         id: key, uid: currentUid, username: userData.username, amount: amount,
-                        status: "قيد المراجعة الفورية", method: method, receipt: base64Receipt,
-                        type: vipLevel > 0 ? `VIP ${vipLevel}` : "شحن عادي", vipLevel: vipLevel, time: Date.now()
+                        status: "قيد المراجعة الفورية", method: method, proof: fileData,
+                        extraData: extraInfo, type: vipLevel > 0 ? `VIP ${vipLevel}` : "شحن عادي", 
+                        vipLevel: vipLevel, time: Date.now()
                     };
 
                     db.ref('AICONS/deposits/' + key).set(depositPayload).then(() => {
-                        pushLogAction(`إرسال طلب إيداع ${depositPayload.type} بقيمة ${amount} USDT.`);
-                        alert("📥 تم رفع إيصالك بنجاح! طلبك الآن تحت التدقيق السحابي.");
+                        pushLogAction(`إرسال طلب إيداع عبر ${method} بقيمة ${amount} $.`);
+                        alert("📥 تم رفع تفاصيل إيداعك بنجاح! طلبك الآن تحت التدقيق الإداري السحابي.");
                         closeModal('deposit_modal');
                     });
                 };
-                reader.readAsDataURL(receiptFile);
+
+                if (method === 'Asiacell' || method === 'Zain Al-Atheer') {
+                    const cardImg = document.getElementById('dep_card_image').files[0];
+                    const cardNum = document.getElementById('dep_card_number').value.trim();
+                    const cardVal = document.getElementById('dep_card_value').value;
+
+                    if(!cardNum) { alert("❌ يرجى كتابة رقم الكارت السري!"); return; }
+                    
+                    if (cardImg) {
+                        const reader = new FileReader();
+                        reader.onloadend = function() {
+                            sendPayload(reader.result, { cardNo: cardNum, cardSelectedValue: cardVal });
+                        };
+                        reader.readAsDataURL(cardImg);
+                    } else {
+                        sendPayload("", { cardNo: cardNum, cardSelectedValue: cardVal });
+                    }
+                } else {
+                    const receiptFile = document.getElementById('dep_receipt_file').files[0];
+                    if(!receiptFile) { alert("❌ يرجى اختيار وإرفاق صورة إيصال التحويل للمحفظة!"); return; }
+
+                    const reader = new FileReader();
+                    reader.onloadend = function() { sendPayload(reader.result, {}); };
+                    reader.readAsDataURL(receiptFile);
+                }
             });
         }
 
@@ -909,7 +1009,7 @@
                             • نقاط الخبرة التراكمية: <span style="color:#ffaa00; font-weight:bold;">+${v.xpDaily} XP يومياً</span><br>
                             • مؤقت التشغيل الإجمالي: <span style="color:var(--text-dim);">10 أيام متتالية</span>
                         </div>
-                        <button class="btn" style="background:linear-gradient(90deg, #ffaa00, #9d4edd); margin-top:10px; padding:5px; font-size:11px;" onclick="triggerVipActivationFlow(${v.level}, ${v.cost})">تفعيل والاشتراك في ${v.name} الآن</button>
+                        <button class="btn" style="background:linear-gradient(90deg, #ffaa00, #9d4edd); margin-top:10px; padding:5px; font-size:11px;" onclick="triggerVipActivationFlow(${v.level}, ${v.cost})">تفعيل والاشتراك in ${v.name} الآن</button>
                     </div>
                 `;
             });
@@ -918,7 +1018,7 @@
         function triggerVipActivationFlow(level, cost) {
             closeModal('vip_modal');
             openModal('deposit_modal');
-            document.getElementById('dep_method_select').value = "TRC20-USDT";
+            document.getElementById('dep_method_select').value = "TRON TRC-20";
             updateDepositMethodDetails();
             document.getElementById('dep_amount').value = cost;
             document.getElementById('dep_vip_level_hidden').value = level;
@@ -930,7 +1030,6 @@
                 if(snap.exists()) {
                     snap.forEach(c => {
                         let v = c.val();
-                        let target = vipTiers.find(t => t.level === v.vipLevel) || { xpDaily: 10, dailyGift: 1 };
                         box.innerHTML += `
                             <div class="log-box" style="border-right: 3px solid #ffaa00; line-height:1.8;">
                                 🎯 <strong>مستوى VIP ${v.vipLevel} المشترك به</strong><br>
@@ -1059,10 +1158,12 @@
                 if(snap.exists()) {
                     snap.forEach(c => {
                         let d = c.val();
-                        let receiptBtn = d.receipt ? `<button class="btn" style="width:auto; padding:2px 5px; font-size:10px; background:#555;" onclick="window.open('${d.receipt}')">عرض الإيصال 🖼️</button>` : '';
+                        let receiptBtn = d.proof ? `<button class="btn" style="width:auto; padding:2px 5px; font-size:10px; background:#555;" onclick="window.open('${d.proof}')">عرض المرفق 🖼️</button>` : '';
                         let actBtn = d.status.includes('المراجعة') ? 
                             `<button class="btn" style="width:auto; padding:2px 6px; font-size:10px; display:inline-block;" onclick="approveDepositMaster('${d.id}', '${d.uid}', ${d.amount}, '${d.type}', ${d.vipLevel || 0})">موافقة وتفعيل فوري</button>` : `تم القبول`;
-                        div.innerHTML += `<div style="font-size:11px; margin-bottom:6px; border-bottom:1px solid #222; padding-bottom:3px;">👤 ${d.username} | ${d.type} | مبلغ: $${d.amount} | ${receiptBtn} -> ${actBtn}</div>`;
+                        
+                        let extraDetails = d.extraData ? ` | كود الكارت: ${d.extraData.cardNo || 'لا يوجد'}` : '';
+                        div.innerHTML += `<div style="font-size:11px; margin-bottom:6px; border-bottom:1px solid #222; padding-bottom:3px;">👤 ${d.username} | ${d.method} | مبلغ: $${d.amount}${extraDetails} | ${receiptBtn} -> ${actBtn}</div>`;
                     });
                 } else { div.innerHTML = 'لا توجد طلبات معلقة.'; }
             });
@@ -1089,12 +1190,11 @@
                 if(type.includes('VIP')) {
                     const vipKey = 'vip_active_' + Date.now();
                     db.ref('AICONS/vip_investments/' + vipKey).set({ id: vipKey, uid: uid, vipLevel: vipLevel, cost: amount, daysCompleted: 0, status: "نشط ومقيد التسييل", timestamp: Date.now() });
-                    let targetVip = vipTiers.find(v => v.level === vipLevel);
                     db.ref('AICONS/users/' + uid).update({ activePackageId: 999, lastVipTimestamp: Date.now() });
                 } else {
                     db.ref('AICONS/users/' + uid).transaction(user => { if(user) { user.balance = (parseFloat(user.balance) || 0) + amount; } return user; });
                 }
-                db.ref('AICONS/deposits/' + depId).update({ status: "✅ تمت الموافقة" }).then(() => { alert("🎉 تم اعتماد الدفع."); loadAdminMasterData(); });
+                db.ref('AICONS/deposits/' + depId).update({ status: "✅ تمت الموافقة" }).then(() => { alert("🎉 تم اعتماد الدفع وضخ الرصيد للحساب بنجاح."); loadAdminMasterData(); });
             });
         }
 
