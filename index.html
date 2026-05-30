@@ -20,6 +20,7 @@
             --accent-blue: #00d2ff;
             --accent-purple: #9d4edd;
             --border-color: rgba(255, 255, 255, 0.08);
+            --verified-color: #00a2ff;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Cairo', sans-serif; user-select: none; }
@@ -31,6 +32,19 @@
             overflow-x: hidden;
             font-size: 13px;
         }
+
+        /* شاشة الحظر الصارمة والتجميد الكامل */
+        .ban-overlay-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle, #240a0a 0%, #050202 100%);
+            z-index: 100000; display: none; flex-direction: column;
+            justify-content: center; align-items: center; text-align: center; padding: 20px;
+        }
+        .ban-box {
+            background: rgba(40, 10, 10, 0.6); padding: 30px 20px; border-radius: 16px;
+            border: 2px solid #ff3344; box-shadow: 0 0 30px rgba(255, 51, 68, 0.3); max-width: 360px;
+        }
+        .ban-box i { font-size: 60px; color: #ff3344; margin-bottom: 15px; animation: pulseSupport 1.5s infinite; }
 
         /* تأثير الانتظار الدوار العام */
         .loading-overlay {
@@ -178,7 +192,7 @@
         .close-btn { float: left; color: #ff3366; cursor: pointer; font-size: 18px; }
         .log-box { font-size: 11px; background: rgba(0,0,0,0.3); padding: 7px; border-radius: 5px; margin-top: 5px; border-left: 3px solid var(--accent-blue); }
 
-        /* ==================== تصميم عداد التنزيل المتطور ==================== */
+        /* عداد التنزيل المتطور */
         .download-box { text-align: center; padding: 20px 0; }
         .progress-circle-bar {
             width: 110px; height: 110px; border-radius: 50%;
@@ -210,15 +224,89 @@
             100% { transform: scale(1); box-shadow: 0 4px 15px rgba(0, 136, 204, 0.4); }
         }
 
-        /* تنسيقات الصورة الشخصية المضافة */
-        .profile-avatar {
-            width: 75px; height: 75px; border-radius: 50%; object-fit: cover;
-            border: 2px solid var(--accent-blue); margin-bottom: 10px;
-            box-shadow: 0 0 10px var(--accent-blue);
+        /* الاحترافية العالية للملف الشخصي */
+        .premium-profile-header {
+            position: relative; background: linear-gradient(145deg, #1d1b4c, #0a081a);
+            border-radius: 16px; padding: 30px 15px 20px 15px; border: 1px solid rgba(255, 255, 255, 0.06);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5); text-align: center; margin-bottom: 20px;
+            overflow: hidden;
         }
+        .premium-profile-header::before {
+            content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+            background: radial-gradient(circle, rgba(0, 210, 255, 0.08) 0%, transparent 60%);
+            pointer-events: none;
+        }
+        .avatar-wrapper {
+            position: relative; width: 90px; height: 90px; margin: 0 auto 15px auto;
+        }
+        .profile-avatar {
+            width: 100%; height: 100%; border-radius: 50%; object-fit: cover;
+            border: 3px solid #141832; box-shadow: 0 0 0 2px var(--accent-blue);
+        }
+        .avatar-fallback {
+            width: 100%; height: 100%; border-radius: 50%; background: #1f1b40;
+            display: flex; justify-content: center; align-items: center;
+            font-size: 35px; color: var(--accent-purple); box-shadow: 0 0 0 2px var(--accent-purple);
+        }
+        
+        /* تأثيرات نجمة التوثيق المتوهجة والمتحركة */
+        .verified-badge-star {
+            display: inline-flex; align-items: center; justify-content: center;
+            color: var(--verified-color); font-size: 15px; margin-right: 5px;
+            text-shadow: 0 0 12px #00a2ff, 0 0 25px #00a2ff;
+            animation: starRotateGlow 2.5s linear infinite, starPulseGlow 1.5s ease-in-out infinite alternate;
+            vertical-align: middle;
+        }
+        @keyframes starRotateGlow {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        @keyframes starPulseGlow {
+            0% { filter: drop-shadow(0 0 2px #00a2ff); }
+            100% { filter: drop-shadow(0 0 10px #00edff); }
+        }
+
+        .profile-name-container {
+            display: flex; align-items: center; justify-content: center; gap: 4px;
+            font-size: 18px; font-weight: 700; color: #fff; margin-bottom: 4px;
+        }
+
+        .premium-meta-badge {
+            display: inline-block; background: rgba(0, 210, 255, 0.08); border: 1px solid rgba(0, 210, 255, 0.2);
+            color: var(--accent-blue); font-size: 10px; padding: 2px 10px; border-radius: 20px; font-weight: 600;
+            margin-bottom: 15px;
+        }
+
+        .premium-info-grid {
+            background: rgba(0, 0, 0, 0.25); border-radius: 12px; padding: 12px;
+            text-align: right; display: flex; flex-direction: column; gap: 8px;
+            border: 1px solid rgba(255,255,255,0.03);
+        }
+        .premium-info-row {
+            display: flex; justify-content: space-between; align-items: center;
+            padding-bottom: 6px; border-bottom: 1px solid rgba(255,255,255,0.04);
+        }
+        .premium-info-row:last-child { border-bottom: none; padding-bottom: 0; }
+        .premium-info-label { color: var(--text-dim); font-size: 11px; }
+        .premium-info-value { color: #fff; font-weight: 600; font-size: 12px; }
+
     </style>
 </head>
 <body>
+
+    <!-- شاشة الحظر التامة المطلقة -->
+    <div id="account_banned_screen" class="ban-overlay-screen">
+        <div class="ban-box">
+            <i class="fa fa-triangle-exclamation"></i>
+            <h2 style="color: #fff; font-size: 20px; margin-bottom: 10px;">تم تجميد وحظر الحساب!</h2>
+            <p style="color: #b0b5e0; font-size: 12px; line-height: 1.7; margin-bottom: 20px;">
+                نأسف لإبلاغك بأن إدارة الامتثال قد قامت بتجميد حسابك بالكامل نتيجة رصد أنشطة غير مصرح بها أو لمخالفة شروط وميثاق الاستخدام الخاص بالمنصة لعام 2026.
+            </p>
+            <div style="background: rgba(0,0,0,0.4); padding: 10px; border-radius: 8px; font-size: 11px; color: #ff8888;">
+                ⚠️ الحالة: مجمد كلياً (الوقت والأرباح متوقفة)
+            </div>
+        </div>
+    </div>
 
     <div class="marquee-container">
         <div class="marquee-text">
@@ -318,7 +406,7 @@
                         <small style="font-size:9px; color:var(--accent-blue); margin-top:2px;" id="timer_status_label">جاهز للجمع</small>
                     </div>
                 </div>
-                <button class="btn" id="claim_earnings_btn" style="width:auto; padding:6px 20px; font-size:11px;" onclick="triggerMiningDay()"><i class="fa fa-bolt"></i> تحديث واستلام العائد اليومي</button>
+                <button class="btn" id="claim_earnings_btn" style="width:auto; padding:6px 20px; font-size:11px;" onclick="triggerMiningDay()"><i class="fa fa-bolt"></i> تحديث واستلاف العائد اليومي</button>
             </div>
 
             <div class="xp-container">
@@ -369,23 +457,45 @@
         </div>
 
         <div id="profile_tab" class="app-container">
-            <h2>الملف الشخصي الآمن</h2>
-            <div class="user-main-card" style="text-align:center;">
-                <img id="prof_avatar_display" src="" alt="Avatar" class="profile-avatar" style="display:none;">
-                <i id="prof_avatar_icon" class="fa fa-user-gear" style="font-size:35px; color:var(--accent-purple); margin-bottom:10px;"></i>
-                <h3 id="prof_name_display" style="color:#fff;">---</h3>
-                <p style="font-size:11px; color:var(--text-dim);" id="prof_phone_display">---</p>
-                <p style="font-size:11px; color:var(--text-dim);" id="prof_email_display">---</p>
+            <h2>الحساب الشخصي الاستثماري</h2>
+            
+            <!-- تصميم احترافي مع النجمة الزرقاء المتوهجة -->
+            <div class="premium-profile-header">
+                <div class="avatar-wrapper">
+                    <img id="prof_avatar_display" src="" alt="Avatar" class="profile-avatar" style="display:none;">
+                    <div id="prof_avatar_fallback" class="avatar-fallback"><i class="fa fa-user-astronaut"></i></div>
+                </div>
                 
-                <div style="margin-top:15px; border-top:1px solid rgba(255,255,255,0.1); padding-top:10px; text-align:right; font-size:12px; line-height:1.8;">
-                    <div><i class="fa fa-gift" style="color:var(--accent-blue);"></i> رمز الإحالة الداخلي: <strong id="prof_ref_code" style="color:#fff;">---</strong></div>
-                    <div><i class="fa fa-cubes" style="color:var(--accent-purple);"></i> عدد الباقات الاستثمارية النشطة: <strong id="prof_active_pkgs" style="color:#00ffcc;">0 باقة</strong></div>
+                <div class="profile-name-container">
+                    <span id="prof_name_display">---</span>
+                    <span id="verified_badge_el" class="verified-badge-star" style="display:none;"><i class="fa fa-certificate"></i></span>
+                </div>
+                
+                <div class="premium-meta-badge" id="prof_account_tier_lbl">المستوى الاستثماري الأساسي</div>
+                
+                <div class="premium-info-grid">
+                    <div class="premium-info-row">
+                        <span class="premium-info-label"><i class="fa fa-envelope" style="color:var(--accent-blue);"></i> البريد المربوط</span>
+                        <span class="premium-info-value" id="prof_email_display">---</span>
+                    </div>
+                    <div class="premium-info-row">
+                        <span class="premium-info-label"><i class="fa fa-phone" style="color:var(--accent-blue);"></i> رقم الاتصال الآمن</span>
+                        <span class="premium-info-value" id="prof_phone_display">---</span>
+                    </div>
+                    <div class="premium-info-row">
+                        <span class="premium-info-label"><i class="fa fa-share-nodes" style="color:var(--accent-purple);"></i> كود الدعوة والترويج</span>
+                        <span class="premium-info-value" id="prof_ref_code" style="color:var(--accent-blue); letter-spacing:0.5px;">---</span>
+                    </div>
+                    <div class="premium-info-row">
+                        <span class="premium-info-label"><i class="fa fa-cubes" style="color:var(--accent-purple);"></i> العقود والباقات النشطة</span>
+                        <span class="premium-info-value" id="prof_active_pkgs" style="color:#00ffcc;">0 باقة</span>
+                    </div>
                 </div>
             </div>
 
-            <button class="btn" style="background: linear-gradient(90deg, #ffaa00, #ff5500); margin-bottom:10px;" onclick="openModal('vip_modal')"><i class="fa fa-crown"></i> ترقية الحساب وميزات VIP</button>
-            <button class="btn btn-secondary" style="background:#cc2255;" onclick="logoutSession()"><i class="fa fa-sign-out-alt"></i> تسجيل خروج آمن</button>
-            <button class="btn" id="admin_gate_btn" style="display:none; margin-top:15px; background:#4b0082;" onclick="openAdminDashboard()"><i class="fa fa-user-shield"></i> لوحة الإدارة العليا والتحكم</button>
+            <button class="btn" style="background: linear-gradient(90deg, #ffaa00, #ff5500); margin-bottom:12px;" onclick="openModal('vip_modal')"><i class="fa fa-crown"></i> ترقية ومميزات الـ VIP للأعضاء</button>
+            <button class="btn btn-secondary" style="background:#cc2255; padding:11px;" onclick="logoutSession()"><i class="fa fa-sign-out-alt"></i> تسجيل خروج آمن من السيرفر</button>
+            <button class="btn" id="admin_gate_btn" style="display:none; margin-top:15px; background:linear-gradient(90deg, #4b0082, #240046);" onclick="openAdminDashboard()"><i class="fa fa-user-shield"></i> لوحة الإدارة العليا والتحكم</button>
         </div>
 
         <nav class="bottom-navbar">
@@ -414,8 +524,8 @@
                 </div>
             </div>
 
-            <div id="install_btn_container" style="display: none; margin-top:10px; animation: pulseSupport 1.5s infinite;">
-                <a href="https://www.mediafire.com/file/wedoslvmvix2wnv/AICONS.apk/file" target="_blank" class="btn" style="background: linear-gradient(90deg, #00ffcc, #00aa66); box-shadow: 0 0 15px #00ffcc; font-size:13px; font-weight:bold; letter-spacing:0.5px;" onclick="closeModal('download_app_modal')">
+            <div id="install_btn_container" style="display: none; margin-top:10px;">
+                <a href="https://www.mediafire.com/file/wedoslvmvix2wnv/AICONS.apk/file" target="_blank" class="btn" style="background: linear-gradient(90deg, #00ffcc, #00aa66); font-size:13px; font-weight:bold;" onclick="closeModal('download_app_modal')">
                     <i class="fa fa-circle-down"></i> تثبيت التطبيق المباشر الآن
                 </a>
             </div>
@@ -520,8 +630,9 @@
         </div>
     </div>
 
+    <!-- لوحة التحكم الإدارية الكبرى -->
     <div id="admin_modal" class="modal">
-        <div class="modal-content" style="max-width:92%; width:92%;">
+        <div class="modal-content" style="max-width:94%; width:94%;">
             <span class="close-btn" onclick="closeModal('admin_modal')">×</span>
             <h3>لوحة التحكم والتحليلات للأدمن</h3>
             <br>
@@ -529,8 +640,8 @@
             <div id="admin_deposits_list" style="max-height:160px; overflow-y:auto; margin-bottom:15px; background:rgba(0,0,0,0.3); padding:5px;"></div>
             <h4>إدارة طلبات سحب الأبرار المعلقة</h4>
             <div id="admin_withdrawals_list" style="max-height:140px; overflow-y:auto; margin-bottom:15px; background:rgba(0,0,0,0.3); padding:5px;"></div>
-            <h4>قائمة المستخدمين وباقاتهم</h4>
-            <div id="admin_users_list" style="max-height:140px; overflow-y:auto; background:rgba(0,0,0,0.3); padding:5px;"></div>
+            <h4>قائمة التحكم والمستخدمين والتوثيق / الحظر السريع</h4>
+            <div id="admin_users_list" style="max-height:180px; overflow-y:auto; background:rgba(0,0,0,0.3); padding:5px;"></div>
         </div>
     </div>
 
@@ -547,7 +658,6 @@
         let userData = null;
         let miningIntervalId = null;
 
-        // مصفوفة الباقات المعدلة والمحدثة بالكامل بترتيب تصاعدي حسب قيمتها وتسميتها المميّزة
         const investmentPackages = [
             { id: 1, cost: 15, payout: 0.50, name: "الباقة النحاسية (15$)" },
             { id: 2, cost: 30, payout: 1, name: "الباقة البرونزية (30$)" },
@@ -650,7 +760,7 @@
                                 myRefCode: 'AIC_REF_' + Math.floor(1000 + Math.random()*9000),
                                 balance: 0.00, dailyProfit: 0.00, teamProfit: 0.00, xp: 0,
                                 activePackageId: 0, activePackagesList: {}, isAdmin: (user.toLowerCase() === 'admin'),
-                                lastMiningTimestamp: 0, avatar: avatarBase64
+                                lastMiningTimestamp: 0, avatar: avatarBase64, isBanned: false, isVerified: false
                             };
                             db.ref('AICONS/users/' + uid).set(data).then(() => {
                                 localStorage.setItem('aicons_user_uid', uid);
@@ -704,26 +814,46 @@
                 if(!snap.exists()) return;
                 userData = snap.val();
 
+                // التحقق الفوري واللحظي الصارم من الحظر من قبل الأدمن والتجميد الكلي للحساب
+                if(userData.isBanned === true) {
+                    document.getElementById('main_app_view').style.display = 'none';
+                    document.getElementById('account_banned_screen').style.display = 'flex';
+                    if(miningIntervalId) clearInterval(miningIntervalId);
+                    return; 
+                } else {
+                    document.getElementById('account_banned_screen').style.display = 'none';
+                }
+
                 document.getElementById('user_balance').innerText = parseFloat(userData.balance).toFixed(2) + " USDT";
                 document.getElementById('user_daily').innerText = parseFloat(userData.dailyProfit).toFixed(2) + "$";
                 document.getElementById('user_team_profit').innerText = parseFloat(userData.teamProfit).toFixed(2) + "$";
                 document.getElementById('xp_percent_text').innerText = (userData.xp || 0) + "%";
                 document.getElementById('xp_bar_fill').style.width = (userData.xp || 0) + "%";
 
-                // تحديث واجهة الملف الشخصي بالمعطيات الجديدة
                 document.getElementById('prof_name_display').innerText = userData.username;
                 document.getElementById('prof_phone_display').innerText = userData.phone;
                 document.getElementById('prof_email_display').innerText = userData.email;
                 document.getElementById('team_my_code').innerText = userData.myRefCode;
                 document.getElementById('prof_ref_code').innerText = userData.myRefCode;
 
+                // إظهار أو إخفاء النجمة الزرقاء المتوهجة والمتحركة للتوثيق بشكل احترافي
+                if(userData.isVerified === true) {
+                    document.getElementById('verified_badge_el').style.display = 'inline-flex';
+                    document.getElementById('prof_account_tier_lbl').innerText = "حساب مستثمر موثق بالكامل VIP 💎";
+                    document.getElementById('prof_account_tier_lbl').style.color = "var(--verified-color)";
+                } else {
+                    document.getElementById('verified_badge_el').style.display = 'none';
+                    document.getElementById('prof_account_tier_lbl').innerText = "المستوى الاستثماري الأساسي";
+                    document.getElementById('prof_account_tier_lbl').style.color = "var(--accent-blue)";
+                }
+
                 if (userData.avatar && userData.avatar !== "") {
                     document.getElementById('prof_avatar_display').src = userData.avatar;
-                    document.getElementById('prof_avatar_display').style.display = 'inline-block';
-                    document.getElementById('prof_avatar_icon').style.display = 'none';
+                    document.getElementById('prof_avatar_display').style.display = 'block';
+                    document.getElementById('prof_avatar_fallback').style.display = 'none';
                 } else {
                     document.getElementById('prof_avatar_display').style.display = 'none';
-                    document.getElementById('prof_avatar_icon').style.display = 'inline-block';
+                    document.getElementById('prof_avatar_fallback').style.display = 'flex';
                 }
 
                 setupMiningCountdownLogic(userData.lastMiningTimestamp || 0);
@@ -804,7 +934,6 @@
 
         function startAppDownloadProcess() {
             openModal('download_app_modal');
-            
             document.getElementById('install_btn_container').style.display = 'none';
             document.getElementById('download_title_text').innerText = "جاري تهيئة وتأمين ملف الحزمة...";
             
@@ -849,6 +978,12 @@
             const dayInMs = 24 * 60 * 60 * 1000;
             
             function updateTimer() {
+                // تجميد المؤقت تماماً في حال الحظر
+                if (userData && userData.isBanned === true) {
+                    clearInterval(miningIntervalId);
+                    return;
+                }
+
                 const now = Date.now();
                 const timePassed = now - lastTimestamp;
                 const timeRemaining = dayInMs - timePassed;
@@ -879,6 +1014,7 @@
         }
 
         function triggerMiningDay() {
+            if (userData && userData.isBanned === true) return;
             if(!userData || !userData.activePackageId || userData.activePackageId === 0) { 
                 alert("⚠️ يرجى شحن وتفعيل باقة استثمارية أولاً لبدء دورات الـ 24 ساعة وتوليد الأرباح!"); 
                 return; 
@@ -891,6 +1027,7 @@
                 const newTimestamp = Date.now();
                 db.ref('AICONS/users/' + currentUid).transaction(user => {
                     if(user) { 
+                        if(user.isBanned === true) return; // الحماية القصوى ضد التلاعب الخارجي
                         user.balance = (parseFloat(user.balance) || 0) + totalPayout; 
                         user.dailyProfit = totalPayout;
                         user.lastMiningTimestamp = newTimestamp;
@@ -904,7 +1041,7 @@
         }
 
         function pushLogAction(text) {
-            if(!currentUid) return;
+            if(!currentUid || (userData && userData.isBanned === true)) return;
             db.ref('AICONS/logs/' + currentUid).push({ action: text, time: Date.now() });
         }
 
@@ -950,7 +1087,6 @@
             const amount = parseFloat(document.getElementById('dep_amount').value);
             const vipLevel = parseInt(document.getElementById('dep_vip_level_hidden').value) || 0;
 
-            // تحديث الحد الأدنى للإيداع ليكون 15 دولار
             if(!amount || amount < 15) { alert("❌ الحد الأدنى لتقديم أي طلب إيداع مالي هو 15$"); return; }
 
             triggerVisualLoading(() => {
@@ -1009,7 +1145,7 @@
                             • نقاط الخبرة التراكمية: <span style="color:#ffaa00; font-weight:bold;">+${v.xpDaily} XP يومياً</span><br>
                             • مؤقت التشغيل الإجمالي: <span style="color:var(--text-dim);">10 أيام متتالية</span>
                         </div>
-                        <button class="btn" style="background:linear-gradient(90deg, #ffaa00, #9d4edd); margin-top:10px; padding:5px; font-size:11px;" onclick="triggerVipActivationFlow(${v.level}, ${v.cost})">تفعيل والاشتراك in ${v.name} الآن</button>
+                        <button class="btn" style="background:linear-gradient(90deg, #ffaa00, #9d4edd); margin-top:10px; padding:5px; font-size:11px;" onclick="triggerVipActivationFlow(${v.level}, ${v.cost})">تفعيل والاشتراك في ${v.name} الآن</button>
                     </div>
                 `;
             });
@@ -1044,11 +1180,12 @@
         }
 
         function buyRegularPlan(id, cost) {
-            if(!userData) return;
+            if(!userData || userData.isBanned === true) return;
             if(userData.balance < cost) { alert("❌ رصيدك الحالي غير كافٍ!"); return; }
             triggerVisualLoading(() => {
                 db.ref('AICONS/users/' + currentUid).transaction(user => {
                     if(user) {
+                        if(user.isBanned === true) return;
                         user.balance = parseFloat(user.balance) - cost;
                         if(!user.activePackagesList) user.activePackagesList = {};
                         let itemKey = 'pkg_' + Date.now();
@@ -1067,6 +1204,7 @@
         }
 
         function submitWithdrawalOrder() {
+            if(userData && userData.isBanned === true) return;
             const wallet = document.getElementById('with_wallet').value.trim();
             const amount = parseFloat(document.getElementById('with_amount').value);
             const pass = document.getElementById('with_pass').value;
@@ -1076,7 +1214,7 @@
             if(userData.balance < amount) { alert("❌ رصيدك الحالي غير كافٍ!"); return; }
 
             triggerVisualLoading(() => {
-                db.ref('AICONS/users/' + currentUid).transaction(user => { if(user) { user.balance = parseFloat(user.balance) - amount; } return user; }).then(() => {
+                db.ref('AICONS/users/' + currentUid).transaction(user => { if(user) { if(user.isBanned === true) return; user.balance = parseFloat(user.balance) - amount; } return user; }).then(() => {
                     const key = db.ref('AICONS/withdrawals').push().key;
                     db.ref('AICONS/withdrawals/' + key).set({ id: key, uid: currentUid, username: userData.username, amount: amount, wallet: wallet, status: "قيد المراجعة السحابية", time: Date.now() })
                     .then(() => {
@@ -1116,6 +1254,7 @@
                 grid.innerHTML += `<div class="crypto-item"><span>${asset}</span><span id="price_${asset.replace(/[^a-zA-Z0-9]/g, '')}" style="color:#00ffcc; font-weight:bold;">$${Math.floor(30 + Math.random()*2500)}</span></div>`; 
             });
             setInterval(() => {
+                if(userData && userData.isBanned === true) return; // إيقاف كل التحديثات في حال التجميد
                 assetList.forEach(asset => {
                     const el = document.getElementById(`price_${asset.replace(/[^a-zA-Z0-9]/g, '')}`);
                     if(el) {
@@ -1132,7 +1271,7 @@
 
         function initNewsTicker() {
             const box = document.getElementById('economy_news_box'); let idx = 0; box.innerText = economicNews[0];
-            setInterval(() => { idx = (idx + 1) % economicNews.length; box.innerText = economicNews[idx]; }, 5000);
+            setInterval(() => { if(userData && userData.isBanned === true) return; idx = (idx + 1) % economicNews.length; box.innerText = economicNews[idx]; }, 5000);
         }
 
         function renderInvestmentPlans() {
@@ -1152,6 +1291,8 @@
         function logoutSession() { localStorage.removeItem('aicons_user_uid'); location.reload(); }
 
         function openAdminDashboard() { openModal('admin_modal'); loadAdminMasterData(); }
+        
+        // لوحة الأدمن المعززة بميزات الحظر والتوثيق المباشر بنجمة زرقاء
         function loadAdminMasterData() {
             db.ref('AICONS/deposits').on('value', snap => {
                 const div = document.getElementById('admin_deposits_list'); div.innerHTML = '';
@@ -1181,7 +1322,36 @@
 
             db.ref('AICONS/users').on('value', snap => {
                 const div = document.getElementById('admin_users_list'); div.innerHTML = '';
-                if(snap.exists()) { snap.forEach(c => { div.innerHTML += `<div style="font-size:11px;">👤 الاسم: ${c.val().username} | رصيد: $${parseFloat(c.val().balance).toFixed(2)} USDT</div>`; }); }
+                if(snap.exists()) { 
+                    snap.forEach(c => { 
+                        let u = c.val();
+                        let banBtn = u.isBanned ? 
+                            `<button class="btn" style="width:auto; padding:1px 5px; font-size:9px; background:green; display:inline;" onclick="setAccountBanStatus('${u.uid}', false)">إلغاء حظر الحساب</button>` :
+                            `<button class="btn" style="width:auto; padding:1px 5px; font-size:9px; background:red; display:inline;" onclick="setAccountBanStatus('${u.uid}', true)">حظر وتجميد</button>`;
+                        
+                        let verifyBtn = u.isVerified ?
+                            `<button class="btn" style="width:auto; padding:1px 5px; font-size:9px; background:#444; display:inline;" onclick="setAccountVerificationStatus('${u.uid}', false)">إلغاء التوثيق</button>` :
+                            `<button class="btn" style="width:auto; padding:1px 5px; font-size:9px; background:#00a2ff; display:inline;" onclick="setAccountVerificationStatus('${u.uid}', true)">منح نجمة توثيق 🌟</button>`;
+
+                        div.innerHTML += `
+                            <div style="font-size:11px; margin-bottom:6px; border-bottom: 1px solid #222; padding-bottom:4px;">
+                                👤 الاسم: ${u.username} | رصيد: $${parseFloat(u.balance).toFixed(2)}<br>
+                                الإجراءات: ${banBtn} | ${verifyBtn}
+                            </div>`; 
+                    }); 
+                }
+            });
+        }
+
+        function setAccountBanStatus(uid, isBan) {
+            db.ref('AICONS/users/' + uid).update({ isBanned: isBan }).then(() => {
+                alert(isBan ? "🚫 تم تجميد الحساب وحظره بالكامل فوراً!" : "✅ تم إلغاء حظر وتنشيط الحساب.");
+            });
+        }
+
+        function setAccountVerificationStatus(uid, isVerify) {
+            db.ref('AICONS/users/' + uid).update({ isVerified: isVerify }).then(() => {
+                alert(isVerify ? "🌟 تم منح العضو النجمة الزرقاء المتوهجة وثوقية كاملة!" : "تم سحب التوثيق من العضو.");
             });
         }
 
