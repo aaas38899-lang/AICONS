@@ -407,7 +407,7 @@
 
     <div id="deposit_modal" class="modal">
         <div class="modal-content">
-            <span class="close-btn" onclick="closeModal('deposit_modal')">&times;</span>
+            <span class="close-btn" onclick="closeModal('deposit_modal')">×</span>
             <h3>بوابة شحن وإيداع الحساب السحابي</h3>
             <div class="input-group">
                 <label>الخطوة 1: اختيار طريقة الإيداع</label>
@@ -439,7 +439,7 @@
 
     <div id="active_packages_modal" class="modal">
         <div class="modal-content">
-            <span class="close-btn" onclick="closeModal('active_packages_modal')">&times;</span>
+            <span class="close-btn" onclick="closeModal('active_packages_modal')">×</span>
             <h3>تفاصيل باقاتك الاستثمارية النشطة</h3>
             <div id="active_pkgs_list" style="margin-top:15px;">لا توجد باقات نشطة حالياً.</div>
         </div>
@@ -447,9 +447,9 @@
 
     <div id="withdraw_modal" class="modal">
         <div class="modal-content">
-            <span class="close-btn" onclick="closeModal('withdraw_modal')">&times;</span>
+            <span class="close-btn" onclick="closeModal('withdraw_modal')">×</span>
             <h3>بوابة السحب الفوري الموثق</h3>
-            <div class="input-group no-label"><i class="fa fa-wallet"></i><input type="text" id="with_wallet" placeholder="عنوان محفظتك لاستلام USDT"></div>
+            <div class="input-group no-label"><i class="fa fa-wallet"></i><input type="text" id="with_wallet" placeholder="عنوان محفظتك لاستلاف USDT"></div>
             <div class="input-group no-label"><i class="fa fa-dollar-sign"></i><input type="number" id="with_amount" placeholder="قيمة السحب ($30 - $9999)"></div>
             <div class="input-group no-label"><i class="fa fa-lock"></i><input type="password" id="with_pass" placeholder="اكتب كلمة سر الحساب للتأكيد"></div>
             <button class="btn" style="background:linear-gradient(90deg, #ff3366, var(--accent-purple));" onclick="submitWithdrawalOrder()">طلب سحب الرصيد المباشر</button>
@@ -459,7 +459,7 @@
 
     <div id="notifications_modal" class="modal">
         <div class="modal-content">
-            <span class="close-btn" onclick="closeModal('notifications_modal')">&times;</span>
+            <span class="close-btn" onclick="closeModal('notifications_modal')">×</span>
             <h3>سجل التحركات السحابية وإشعارات السيرفر</h3>
             <div id="noti_logs_wrapper" style="margin-top:10px; font-size:12px;">جاري تحميل سجل الأنشطة...</div>
         </div>
@@ -467,7 +467,7 @@
 
     <div id="vip_modal" class="modal">
         <div class="modal-content">
-            <span class="close-btn" onclick="closeModal('vip_modal')">&times;</span>
+            <span class="close-btn" onclick="closeModal('vip_modal')">×</span>
             <h3>بوابة ترقيات ومميزات الـ VIP للمشاريع</h3>
             <div id="vip_tiers_container"></div>
             <h4 style="font-size:12px; margin-top:15px; color:var(--accent-blue);">سجل استثمارات وحالات الـ VIP:</h4>
@@ -477,7 +477,7 @@
 
     <div id="admin_modal" class="modal">
         <div class="modal-content" style="max-width:92%; width:92%;">
-            <span class="close-btn" onclick="closeModal('admin_modal')">&times;</span>
+            <span class="close-btn" onclick="closeModal('admin_modal')">×</span>
             <h3>لوحة التحكم والتحليلات للأدمن</h3>
             <br>
             <h4>إدارة طلبات شحن وإيداع الـ VIP والخطط العادية</h4>
@@ -502,12 +502,20 @@
         let userData = null;
         let miningIntervalId = null;
 
+        // مصفوفة الباقات المعدلة والمحدثة بالكامل بترتيب تصاعدي حسب قيمتها وتسميتها المميّزة
         const investmentPackages = [
-            { id: 1, cost: 50, payout: 3, name: "باقة تعدين النحاس AI" },
-            { id: 2, cost: 80, payout: 5, name: "باقة تعدين الفضة الفورية" },
-            { id: 3, cost: 180, payout: 7, name: "باقة تعدين الذهب المستدام" },
-            { id: 4, cost: 280, payout: 10, name: "باقة تعدين البلاتينيوم الذكي" },
-            { id: 5, cost: 500, payout: 18, name: "باقة التمويل العقاري العالمي" }
+            { id: 1, cost: 15, payout: 0.50, name: "الباقة النحاسية (15$)" },
+            { id: 2, cost: 30, payout: 1, name: "الباقة البرونزية (30$)" },
+            { id: 3, cost: 60, payout: 2, name: "الباقة الفضية (60$)" },
+            { id: 4, cost: 90, payout: 3, name: "الباقة الذهبية (90$)" },
+            { id: 5, cost: 180, payout: 6, name: "الباقة البلاتينية (180$)" },
+            { id: 6, cost: 360, payout: 12, name: "الباقة الياقوتية (360$)" },
+            { id: 7, cost: 720, payout: 24, name: "الباقة الزمردية (720$)" },
+            { id: 8, cost: 1440, payout: 48, name: "الباقة الألماسية (1440$)" },
+            { id: 9, cost: 1800, payout: 60, name: "باقة التاج الملكي (1800$)" },
+            { id: 10, cost: 2880, payout: 96, name: "باقة النخبة الفي آي بي (2880$)" },
+            { id: 11, cost: 3300, payout: 110, name: "باقة الإمبراطور الاستثمارية (3300$)" },
+            { id: 12, cost: 5760, payout: 192, name: "باقة القمة العالمية الأسطورية (5760$)" }
         ];
 
         const vipTiers = [
@@ -726,11 +734,9 @@
             });
         }
 
-        // ==================== منطق ترقية التنزيل المتطور وتدرج الألوان المخصص ====================
         function startAppDownloadProcess() {
             openModal('download_app_modal');
             
-            // إعادة تصفير الواجهة قبل البدء
             document.getElementById('install_btn_container').style.display = 'none';
             document.getElementById('download_title_text').innerText = "جاري تهيئة وتأمين ملف الحزمة...";
             
@@ -740,34 +746,31 @@
             const statusLbl = document.getElementById('download_status_lbl');
             
             const interval = setInterval(() => {
-                progress += 2; // سرعة تعبئة ذكية وحركية للعداد
+                progress += 2; 
                 txt.innerText = progress + "%";
                 
-                // حساب اللون الحركي المخصص بالتوازي مع قيمة التقدم (تغيير ألوان تفاعلي)
-                let currentColor = '#ff3366'; // أحمر في البداية
+                let currentColor = '#ff3366'; 
                 if (progress < 40) {
                     currentColor = '#ff3366'; 
                     statusLbl.innerText = "جاري جلب الملف...";
                 } else if (progress >= 40 && progress < 80) {
-                    currentColor = '#ffaa00'; // أصفر بالمنتصف
+                    currentColor = '#ffaa00'; 
                     statusLbl.innerText = "جاري فحص الأمان...";
                     document.getElementById('download_title_text').innerText = "فحص الحزمة السحابية آلياً 🛡️";
                 } else {
-                    currentColor = '#00ffcc'; // أخضر فوسفوري عند الاكتمال والجاهزية
+                    currentColor = '#00ffcc'; 
                     statusLbl.innerText = "جاهز للتثبيت الفوري";
                 }
                 
-                // تحديث شكل ومظهر الخلفية المخروطية للعداد بالألوان المحدثة
                 circle.style.background = `conic-gradient(${currentColor} ${progress}%, #1a1e36 ${progress}%)`;
                 
                 if(progress >= 100) {
                     clearInterval(interval);
                     document.getElementById('download_title_text').innerText = "🎉 اكتمل تجهيز الحزمة بنجاح!";
                     statusLbl.innerText = "اضغط لتثبيت الـ APK";
-                    // إظهار زر التثبيت المباشر المرتبط بميديا فاير
                     document.getElementById('install_btn_container').style.display = 'block';
                 }
-            }, 80); // سرعة عد ممتازة تمنح المستخدم تجربة انتظار سلسة واحترافية
+            }, 80); 
         }
 
         function setupMiningCountdownLogic(lastTimestamp) {
